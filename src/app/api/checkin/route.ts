@@ -22,7 +22,10 @@ import {
   REVIEW_QUEUE_REASONS,
   TIER_1_STUDENT_DISCLOSURE,
   TIER_2_STUDENT_SAFETY_MESSAGE,
+  TIER_1_PARENT_NOTIFICATION,
+  TIER_2_PARENT_NOTIFICATION_URGENT,
 } from '@/lib/checkin/messages';
+import { notifyParent } from '@/lib/notifications';
 
 const CheckinRequestSchema = z.object({
   mood_text: z.string().min(1, 'Mood text cannot be empty'),
@@ -141,20 +144,48 @@ export async function POST(request: NextRequest) {
     }
 
     // 8. If escalation is enabled AND tier >= 1 AND NOT routed to review queue,
-    //    send notification to parent
-    //    NOTE: Actual notification sending (FCM/email) will be implemented in Phase 4.
-    //    For now, we just log the intent.
+    //    send notification to linked parent using fixed copy from messages.ts.
     if (
       escalationEnabled &&
       classification.tier >= 1 &&
       !classification.stressor_may_involve_linked_adult
     ) {
-      // TODO: Phase 4 — actually send FCM/email notification to linked parent
-      console.log(
-        `[/api/checkin] Tier ${classification.tier} notification would be sent ` +
-          `to linked parent. Checkin ID: ${checkin.id}. ` +
-          `(Notification infra not yet built — Phase 4)`
-      );
+      // Look up the linked parent
+      const { data: link } = await admin
+        .from('student_parent_links')
+        .select('parent_id')
+        .eq('student_id', user.id)
+        .limit(1)
+        .single();
+
+      if (link) {
+        const notifCopy =
+          classification.tier === 2
+            ? TIER_2_PARENT_NOTIFICATION_URGENT
+            : TIER_1_PARENT_NOTIFICATION;
+
+        try {
+          await notifyParent(link.parent_id, {
+            title: notifCopy.title,
+            body: notifCopy.body,
+          });
+        } catch (notifErr) {
+          // Notification failed — update status but don't fail the checkin response
+          console.error(
+            `[/api/checkin] Failed to notify parent for checkin ${checkin.id}:`,
+            notifErr
+          );
+          await admin
+            .from('checkins')
+            .update({ notification_status: 'send_failed' })
+            .eq('id', checkin.id);
+        }
+      } else {
+        console.warn(
+          `[/api/checkin] Tier ${classification.tier} but no linked parent found ` +
+            `for student ${user.id}. Checkin ID: ${checkin.id}`
+        );
+      }
     }
 
     // 9. Build response
