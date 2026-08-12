@@ -1,26 +1,241 @@
 @import "tailwindcss";
 
+/* =============================================================================
+   ZORVAI DESIGN SYSTEM — CSS Custom Properties
+   Source of truth: design-system/zorvai/MASTER.md
+   Do NOT hardcode hex values in components — always use var(--token)
+   ============================================================================= */
+
+/* --- Light Mode (Default) ------------------------------------------------- */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Color Palette — LOCKED */
+  --color-primary: #1B4F5C;
+  --color-on-primary: #FFFFFF;
+  --color-accent: #FF7A45;
+  --color-success: #4A9B7F;
+  --color-warning: #D97757;
+  --color-destructive: #C53030;
+  --color-bg: #F7F5F2;
+  --color-surface: #FFFFFF;
+  --color-text: #2B2A28;
+  --color-text-muted: #6B6966;
+  --color-border: #E8E5E1;
+  --color-border-focus: #1B4F5C;
+  --color-ring: rgba(27, 79, 92, 0.25);
+  --color-muted: #F0EDEA;
+
+  /* Typography Scale */
+  --text-display: 3rem;
+  --text-h1: 2.25rem;
+  --text-h2: 1.75rem;
+  --text-h3: 1.375rem;
+  --text-h4: 1.125rem;
+  --text-body: 1rem;
+  --text-body-sm: 0.875rem;
+  --text-caption: 0.75rem;
+
+  /* Line Heights */
+  --lh-display: 1.1;
+  --lh-h1: 1.2;
+  --lh-h2: 1.25;
+  --lh-h3: 1.3;
+  --lh-h4: 1.35;
+  --lh-body: 1.6;
+  --lh-body-sm: 1.5;
+  --lh-caption: 1.4;
+
+  /* Spacing */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+  --space-20: 5rem;
+
+  /* Shadows — warm, not pure black */
+  --shadow-xs: 0 1px 2px rgba(43, 42, 40, 0.04);
+  --shadow-sm: 0 2px 4px rgba(43, 42, 40, 0.06);
+  --shadow-md: 0 4px 12px rgba(43, 42, 40, 0.08);
+  --shadow-lg: 0 8px 24px rgba(43, 42, 40, 0.10);
+  --shadow-xl: 0 16px 40px rgba(43, 42, 40, 0.12);
+
+  /* Border Radius */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-full: 9999px;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+/* --- Dark Mode ------------------------------------------------------------ */
+/* Maintains same hue relationships — not a gray inversion */
+[data-theme="dark"] {
+  --color-primary: #5BA8B8;
+  --color-on-primary: #0F1B1E;
+  --color-accent: #FF9A6C;
+  --color-success: #6BC4A6;
+  --color-warning: #E09A7E;
+  --color-destructive: #F56565;
+  --color-bg: #161514;
+  --color-surface: #1E1D1B;
+  --color-text: #EDECE9;
+  --color-text-muted: #9C9A96;
+  --color-border: #2E2D2A;
+  --color-border-focus: #5BA8B8;
+  --color-ring: rgba(91, 168, 184, 0.3);
+  --color-muted: #242320;
+
+  /* Dark shadows — slightly more opaque */
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.15);
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.25);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.3);
+  --shadow-xl: 0 16px 40px rgba(0, 0, 0, 0.35);
 }
 
+/* Also support system preference when no explicit toggle */
 @media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+  :root:not([data-theme="light"]) {
+    --color-primary: #5BA8B8;
+    --color-on-primary: #0F1B1E;
+    --color-accent: #FF9A6C;
+    --color-success: #6BC4A6;
+    --color-warning: #E09A7E;
+    --color-destructive: #F56565;
+    --color-bg: #161514;
+    --color-surface: #1E1D1B;
+    --color-text: #EDECE9;
+    --color-text-muted: #9C9A96;
+    --color-border: #2E2D2A;
+    --color-border-focus: #5BA8B8;
+    --color-ring: rgba(91, 168, 184, 0.3);
+    --color-muted: #242320;
+
+    --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.15);
+    --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.2);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.25);
+    --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.3);
+    --shadow-xl: 0 16px 40px rgba(0, 0, 0, 0.35);
   }
 }
 
+/* --- Tailwind CSS 4 Theme Integration ------------------------------------- */
+@theme inline {
+  --color-background: var(--color-bg);
+  --color-foreground: var(--color-text);
+  --font-display: var(--font-fraunces);
+  --font-sans: var(--font-inter);
+  --font-mono: var(--font-geist-mono);
+}
+
+/* --- Base Styles ---------------------------------------------------------- */
+html {
+  font-optical-sizing: auto;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-inter), system-ui, -apple-system, sans-serif;
+  font-size: var(--text-body);
+  line-height: var(--lh-body);
+}
+
+/* --- Typography Base ------------------------------------------------------ */
+h1, h2, h3, .heading-display {
+  font-family: var(--font-fraunces), Georgia, serif;
+  font-optical-sizing: auto;
+  color: var(--color-text);
+}
+
+h4 {
+  font-family: var(--font-inter), system-ui, sans-serif;
+  font-weight: 600;
+}
+
+.heading-display {
+  font-size: var(--text-display);
+  line-height: var(--lh-display);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+h1 {
+  font-size: var(--text-h1);
+  line-height: var(--lh-h1);
+  font-weight: 600;
+  letter-spacing: -0.015em;
+}
+
+h2 {
+  font-size: var(--text-h2);
+  line-height: var(--lh-h2);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+h3 {
+  font-size: var(--text-h3);
+  line-height: var(--lh-h3);
+  font-weight: 600;
+}
+
+h4 {
+  font-size: var(--text-h4);
+  line-height: var(--lh-h4);
+}
+
+/* Number styling — Geist Mono for scores/counts/timers/% */
+.text-number {
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+/* --- Focus & Accessibility ------------------------------------------------ */
+:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--color-ring);
+  border-radius: var(--radius-sm);
+}
+
+/* Respect reduced motion globally — no exceptions */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* --- Interactive Elements ------------------------------------------------- */
+button,
+[role="button"],
+a,
+input[type="submit"],
+input[type="button"],
+select,
+summary {
+  cursor: pointer;
+}
+
+/* --- Selection Color ------------------------------------------------------ */
+::selection {
+  background: rgba(27, 79, 92, 0.15);
+  color: var(--color-text);
+}
+
+[data-theme="dark"] ::selection {
+  background: rgba(91, 168, 184, 0.25);
 }
