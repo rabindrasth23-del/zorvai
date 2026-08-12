@@ -120,7 +120,7 @@ export default function Footer() {
                       (e.currentTarget.style.color = "rgba(255, 255, 255, 0.6)")
                     }
                   >
-                    {link.text || link.label}
+                    {link.label}
                   </Link>
                 </li>
               ))}
