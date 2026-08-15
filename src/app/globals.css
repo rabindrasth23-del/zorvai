@@ -8,23 +8,15 @@
 
 /* --- Light Mode (Default) ------------------------------------------------- */
 :root {
-  /* Color Palette — LOCKED */
-  --color-primary: #1B4F5C;
-  --color-on-primary: #FFFFFF;
-  --color-accent: #FF7A45;
-  --color-success: #4A9B7F;
-  --color-warning: #D97757;
-  --color-destructive: #C53030;
   --color-bg: #F7F5F2;
-  --color-surface: #FFFFFF;
   --color-text: #2B2A28;
-  --color-text-muted: #6B6966;
-  --color-border: #E8E5E1;
-  --color-border-focus: #1B4F5C;
-  --color-ring: rgba(27, 79, 92, 0.25);
-  --color-muted: #F0EDEA;
+
+  /* Layout */
+  --nav-height: 5rem;
+
 
   /* Typography Scale */
+  --text-display-xl: 4.5rem;
   --text-display: 3rem;
   --text-h1: 2.25rem;
   --text-h2: 1.75rem;
@@ -125,6 +117,21 @@
 }
 
 /* --- Tailwind CSS 4 Theme Integration ------------------------------------- */
+@theme {
+  --color-primary: #1B4F5C;
+  --color-on-primary: #FFFFFF;
+  --color-accent: #FF7A45;
+  --color-success: #4A9B7F;
+  --color-warning: #D97757;
+  --color-destructive: #C53030;
+  --color-surface: #FFFFFF;
+  --color-text-muted: #6B6966;
+  --color-border: #E8E5E1;
+  --color-border-focus: #1B4F5C;
+  --color-ring: rgba(27, 79, 92, 0.25);
+  --color-muted: #F0EDEA;
+}
+
 @theme inline {
   --color-background: var(--color-bg);
   --color-foreground: var(--color-text);
@@ -134,63 +141,73 @@
 }
 
 /* --- Base Styles ---------------------------------------------------------- */
-html {
-  font-optical-sizing: auto;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-rendering: optimizeLegibility;
-}
+@layer base {
+  html {
+    font-optical-sizing: auto;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    scroll-padding-top: var(--nav-height);
+  }
 
-body {
-  background: var(--color-bg);
-  color: var(--color-text);
-  font-family: var(--font-inter), system-ui, -apple-system, sans-serif;
-  font-size: var(--text-body);
-  line-height: var(--lh-body);
-}
+  body {
+    background: var(--color-bg);
+    color: var(--color-text);
+    font-family: var(--font-inter), system-ui, -apple-system, sans-serif;
+    font-size: var(--text-body);
+    line-height: var(--lh-body);
+  }
 
-/* --- Typography Base ------------------------------------------------------ */
-h1, h2, h3, .heading-display {
-  font-family: var(--font-fraunces), Georgia, serif;
-  font-optical-sizing: auto;
-  color: var(--color-text);
-}
+  /* --- Typography Base ------------------------------------------------------ */
+  h1, h2, h3, .heading-display, .heading-display-xl {
+    font-family: var(--font-fraunces), Georgia, serif;
+    font-optical-sizing: auto;
+    color: var(--color-text);
+  }
 
-h4 {
-  font-family: var(--font-inter), system-ui, sans-serif;
-  font-weight: 600;
-}
+  h4 {
+    font-family: var(--font-inter), system-ui, sans-serif;
+    font-weight: 600;
+  }
 
-.heading-display {
-  font-size: var(--text-display);
-  line-height: var(--lh-display);
-  font-weight: 700;
-  letter-spacing: -0.02em;
-}
+  .heading-display-xl {
+    font-size: clamp(3rem, 8vw, var(--text-display-xl));
+    line-height: var(--lh-display);
+    font-weight: 700;
+    letter-spacing: -0.03em;
+  }
 
-h1 {
-  font-size: var(--text-h1);
-  line-height: var(--lh-h1);
-  font-weight: 600;
-  letter-spacing: -0.015em;
-}
+  .heading-display {
+    font-size: var(--text-display);
+    line-height: var(--lh-display);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
 
-h2 {
-  font-size: var(--text-h2);
-  line-height: var(--lh-h2);
-  font-weight: 600;
-  letter-spacing: -0.01em;
-}
+  h1 {
+    font-size: var(--text-h1);
+    line-height: var(--lh-h1);
+    font-weight: 600;
+    letter-spacing: -0.015em;
+  }
 
-h3 {
-  font-size: var(--text-h3);
-  line-height: var(--lh-h3);
-  font-weight: 600;
-}
+  h2 {
+    font-size: var(--text-h2);
+    line-height: var(--lh-h2);
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
 
-h4 {
-  font-size: var(--text-h4);
-  line-height: var(--lh-h4);
+  h3 {
+    font-size: var(--text-h3);
+    line-height: var(--lh-h3);
+    font-weight: 600;
+  }
+
+  h4 {
+    font-size: var(--text-h4);
+    line-height: var(--lh-h4);
+  }
 }
 
 /* Number styling — Geist Mono for scores/counts/timers/% */

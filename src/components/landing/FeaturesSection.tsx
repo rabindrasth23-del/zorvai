@@ -1,334 +1,112 @@
-"use client";
-
-import { useRef } from "react";
-import { motion, useInView, useReducedMotion } from "motion/react";
-import { Mic, MessageCircle, BarChart3 } from "lucide-react";
-
-const features = [
-  {
-    icon: Mic,
-    headline: "Sessions that teach, not just quiz",
-    description:
-      "Voice-powered study sessions with a structured learning cycle. Set your own session length — the AI paces itself to fit. No more passive re-reading or random flashcards.",
-    accent: "var(--color-primary)",
-  },
-  {
-    icon: MessageCircle,
-    headline: "Ask anything, anytime",
-    description:
-      "Text or photo — your AI coach is always available for ad-hoc questions, personalized to your exact subject and history. Not a generic search engine with a chatbot skin.",
-    accent: "var(--color-accent)",
-  },
-  {
-    icon: BarChart3,
-    headline: "Watch yourself improve",
-    description:
-      "Every session tracked, every topic scored. See your mastery grow across subjects — not just a streak counter or time-spent metric that doesn't tell you what you actually learned.",
-    accent: "var(--color-success)",
-  },
-];
-
-const entranceTransition = {
-  type: "spring" as const,
-  stiffness: 200,
-  damping: 25,
-  mass: 1,
-};
+import FadeInSection from "./FadeInSection";
 
 export default function FeaturesSection() {
-  const shouldReduceMotion = useReducedMotion();
-  const sectionRef = useRef<HTMLElement>(null);
-  const isInView = useInView(sectionRef, { once: true, margin: "-80px" });
-
   return (
-    <section
-      id="features"
-      ref={sectionRef}
-      aria-labelledby="features-heading"
-      style={{
-        paddingTop: "var(--space-20)",
-        paddingBottom: "var(--space-20)",
-        background: "var(--color-surface)",
-      }}
-    >
-      <div
-        style={{
-          maxWidth: "1200px",
-          margin: "0 auto",
-          padding: "0 var(--space-6)",
-        }}
-      >
-        {/* Section Header */}
-        <motion.div
-          initial={shouldReduceMotion ? false : { opacity: 0, y: 20 }}
-          animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={entranceTransition}
-          style={{ textAlign: "center", marginBottom: "var(--space-16)" }}
-        >
-          <p
-            style={{
-              fontFamily: "var(--font-inter), system-ui, sans-serif",
-              fontSize: "var(--text-body-sm)",
-              fontWeight: 600,
-              color: "var(--color-accent)",
-              letterSpacing: "0.04em",
-              textTransform: "uppercase",
-              marginBottom: "var(--space-3)",
-            }}
-          >
-            Features
-          </p>
-          <h2
-            id="features-heading"
-            style={{
-              fontFamily: "var(--font-fraunces), Georgia, serif",
-              fontSize: "clamp(1.75rem, 4vw, 2.5rem)",
-              lineHeight: 1.2,
-              fontWeight: 600,
-              color: "var(--color-text)",
-              letterSpacing: "-0.015em",
-              marginBottom: "var(--space-4)",
-            }}
-          >
-            Everything a student actually needs
-          </h2>
-          <p
-            style={{
-              fontFamily: "var(--font-inter), system-ui, sans-serif",
-              fontSize: "var(--text-body)",
-              color: "var(--color-text-muted)",
-              maxWidth: "480px",
-              margin: "0 auto",
-              lineHeight: 1.6,
-            }}
-          >
-            Three tools. One coach. No feature bloat.
-          </p>
-        </motion.div>
+    <section className="bg-[var(--color-bg)] py-[var(--space-16)] md:py-[var(--space-24)] px-[var(--space-6)] relative z-20">
+      <div className="max-w-[1200px] mx-auto flex flex-col gap-[var(--space-20)] md:gap-[var(--space-32)]">
+        
+        {/* Feature 1: Subject Adaptation */}
+        <div className="flex flex-col-reverse md:flex-row items-center gap-[var(--space-12)] md:gap-[var(--space-20)]">
+          
+          {/* Left card: Sage/soft background with tags */}
+          <div className="flex-1 w-full">
+            <FadeInSection>
+              <div className="bg-[var(--color-success)]/10 border border-[var(--color-success)]/20 rounded-[var(--radius-xl)] p-[var(--space-10)] md:p-[var(--space-16)] flex flex-wrap gap-[var(--space-3)] justify-center items-center min-h-[300px] shadow-[var(--shadow-sm)]">
+                <span className="bg-white text-[var(--color-text)] font-sans font-medium text-[var(--text-body-sm)] px-[var(--space-4)] py-[var(--space-2)] rounded-[var(--radius-full)] shadow-sm">
+                  Organic Chemistry
+                </span>
+                <span className="bg-white text-[var(--color-text)] font-sans font-medium text-[var(--text-body-sm)] px-[var(--space-4)] py-[var(--space-2)] rounded-[var(--radius-full)] shadow-sm">
+                  Calculus II
+                </span>
+                <span className="bg-white text-[var(--color-text)] font-sans font-medium text-[var(--text-body-sm)] px-[var(--space-4)] py-[var(--space-2)] rounded-[var(--radius-full)] shadow-sm">
+                  Nepali Grammar
+                </span>
+                {/* Changed to a static span to clearly signal it's a mockup representation, not a functional button */}
+                <span className="bg-transparent border border-dashed border-[var(--color-text-muted)] text-[var(--color-text-muted)] font-sans font-medium text-[var(--text-body-sm)] px-[var(--space-4)] py-[var(--space-2)] rounded-[var(--radius-full)]">
+                  + Add a subject
+                </span>
+              </div>
+            </FadeInSection>
+          </div>
 
-        {/* Feature Blocks — alternating layout */}
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            gap: "var(--space-16)",
-          }}
-        >
-          {features.map((feature, i) => {
-            const Icon = feature.icon;
-            const isReversed = i % 2 === 1;
-
-            return (
-              <motion.div
-                key={feature.headline}
-                initial={shouldReduceMotion ? false : { opacity: 0, y: 24 }}
-                animate={isInView ? { opacity: 1, y: 0 } : {}}
-                transition={{
-                  ...entranceTransition,
-                  delay: 0.15 + i * 0.1,
-                }}
-                className="feature-block"
-                style={{
-                  display: "grid",
-                  gap: "var(--space-10)",
-                  alignItems: "center",
-                  direction: isReversed ? "rtl" : "ltr",
-                }}
-              >
-                {/* Text side */}
-                <div style={{ direction: "ltr" }}>
-                  {/* Icon badge */}
-                  <div
-                    style={{
-                      width: "56px",
-                      height: "56px",
-                      borderRadius: "var(--radius-md)",
-                      background: `color-mix(in srgb, ${feature.accent} 10%, transparent)`,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      marginBottom: "var(--space-5)",
-                    }}
-                  >
-                    <Icon
-                      size={28}
-                      color={feature.accent}
-                      strokeWidth={1.75}
-                    />
-                  </div>
-
-                  <h3
-                    style={{
-                      fontFamily: "var(--font-fraunces), Georgia, serif",
-                      fontSize: "clamp(1.375rem, 3vw, 1.75rem)",
-                      lineHeight: 1.25,
-                      fontWeight: 600,
-                      color: "var(--color-text)",
-                      marginBottom: "var(--space-4)",
-                    }}
-                  >
-                    {feature.headline}
-                  </h3>
-
-                  <p
-                    style={{
-                      fontFamily: "var(--font-inter), system-ui, sans-serif",
-                      fontSize: "var(--text-body)",
-                      lineHeight: 1.7,
-                      color: "var(--color-text-muted)",
-                      maxWidth: "460px",
-                    }}
-                  >
-                    {feature.description}
-                  </p>
-                </div>
-
-                {/* Visual side — stylized card preview */}
-                <div
-                  style={{
-                    direction: "ltr",
-                    display: "flex",
-                    justifyContent: "center",
-                  }}
-                >
-                  <div
-                    style={{
-                      width: "100%",
-                      maxWidth: "400px",
-                      aspectRatio: "4 / 3",
-                      background: "var(--color-bg)",
-                      borderRadius: "var(--radius-lg)",
-                      border: "1px solid var(--color-border)",
-                      boxShadow: "var(--shadow-md)",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      position: "relative",
-                      overflow: "hidden",
-                    }}
-                  >
-                    {/* Decorative elements */}
-                    <div
-                      style={{
-                        position: "absolute",
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        height: "4px",
-                        background: feature.accent,
-                        opacity: 0.8,
-                      }}
-                    />
-                    {/* Skeleton UI preview */}
-                    <div
-                      style={{
-                        padding: "var(--space-6)",
-                        width: "100%",
-                      }}
-                    >
-                      <div
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "var(--space-3)",
-                          marginBottom: "var(--space-5)",
-                        }}
-                      >
-                        <div
-                          style={{
-                            width: 36,
-                            height: 36,
-                            borderRadius: "var(--radius-full)",
-                            background: `color-mix(in srgb, ${feature.accent} 15%, transparent)`,
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                          }}
-                        >
-                          <Icon
-                            size={18}
-                            color={feature.accent}
-                            strokeWidth={1.75}
-                          />
-                        </div>
-                        <div>
-                          <div
-                            style={{
-                              width: 120,
-                              height: 10,
-                              borderRadius: 5,
-                              background: "var(--color-muted)",
-                              marginBottom: 6,
-                            }}
-                          />
-                          <div
-                            style={{
-                              width: 80,
-                              height: 8,
-                              borderRadius: 4,
-                              background: "var(--color-border)",
-                            }}
-                          />
-                        </div>
-                      </div>
-                      {[1, 0.8, 0.6].map((opacity, j) => (
-                        <div
-                          key={j}
-                          style={{
-                            height: 8,
-                            borderRadius: 4,
-                            background: "var(--color-muted)",
-                            marginBottom: "var(--space-3)",
-                            width: `${70 + j * 10}%`,
-                            opacity,
-                          }}
-                        />
-                      ))}
-                      <div
-                        style={{
-                          marginTop: "var(--space-5)",
-                          display: "flex",
-                          gap: "var(--space-3)",
-                        }}
-                      >
-                        <div
-                          style={{
-                            height: 32,
-                            width: 100,
-                            borderRadius: "var(--radius-sm)",
-                            background: feature.accent,
-                            opacity: 0.2,
-                          }}
-                        />
-                        <div
-                          style={{
-                            height: 32,
-                            width: 80,
-                            borderRadius: "var(--radius-sm)",
-                            background: "var(--color-border)",
-                          }}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-            );
-          })}
+          {/* Right side text */}
+          <div className="flex-1 w-full">
+            <FadeInSection delay={0.2}>
+              <h2 className="heading-display mb-[var(--space-6)]">
+                Zorvai learns <span className="italic text-[var(--color-primary)]">what you&apos;re studying</span>
+              </h2>
+              <p className="font-sans text-[var(--text-h4)] leading-[var(--lh-body)] text-[var(--color-text-muted)]">
+                Your plan adapts to your subjects, your deadline, and your confidence level — not a generic syllabus. Tell it what you&apos;re stuck on and Day 1 starts there.
+              </p>
+            </FadeInSection>
+          </div>
         </div>
-      </div>
 
-      <style>{`
-        .feature-block {
-          grid-template-columns: 1fr 1fr;
-        }
-        @media (max-width: 768px) {
-          .feature-block {
-            grid-template-columns: 1fr !important;
-            direction: ltr !important;
-          }
-        }
-      `}</style>
+        {/* Feature 2: Mastery Tracking */}
+        {/* Changed to flex-col-reverse so mobile is consistently Text top / Visual bottom across both features */}
+        <div className="flex flex-col-reverse md:flex-row-reverse items-center gap-[var(--space-12)] md:gap-[var(--space-20)]">
+          
+          {/* Visual Card (on right for desktop, bottom for mobile) */}
+          <div className="flex-1 w-full">
+            <FadeInSection delay={0.2}>
+              <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[var(--radius-xl)] p-[var(--space-8)] md:p-[var(--space-16)] flex flex-col gap-[var(--space-4)] justify-center min-h-[300px] shadow-[var(--shadow-sm)]">
+                
+                {/* Understood row */}
+                <div className="flex items-center justify-between bg-white p-[var(--space-4)] rounded-[var(--radius-md)] shadow-[var(--shadow-sm)]">
+                  <div className="flex items-center gap-[var(--space-3)]">
+                    <div className="w-3 h-3 rounded-full bg-[var(--color-success)]" />
+                    <span className="font-sans font-medium text-[var(--color-text)]">Action Potentials</span>
+                  </div>
+                  {/* Status text uses the dark --color-text for accessible contrast, 
+                      relying on the colored dot to carry the semantic hue */}
+                  <span className="font-sans text-[var(--text-caption)] font-bold text-[var(--color-text)] uppercase tracking-wide">
+                    Understood
+                  </span>
+                </div>
+
+                {/* Re-queued row */}
+                <div className="flex items-center justify-between bg-white p-[var(--space-4)] rounded-[var(--radius-md)] shadow-[var(--shadow-sm)]">
+                  <div className="flex items-center gap-[var(--space-3)]">
+                    <div className="w-3 h-3 rounded-full bg-[var(--color-accent)]" />
+                    <span className="font-sans font-medium text-[var(--color-text)]">Cellular Respiration</span>
+                  </div>
+                  <span className="font-sans text-[var(--text-caption)] font-bold text-[var(--color-text)] uppercase tracking-wide">
+                    Re-queued
+                  </span>
+                </div>
+
+                {/* Missed row */}
+                {/* Dropped full-row opacity reduction to preserve WCAG contrast. 
+                    Uses --color-warning for the dot, and muted text for the topic name. */}
+                <div className="flex items-center justify-between bg-[var(--color-bg)] p-[var(--space-4)] rounded-[var(--radius-md)] border border-[var(--color-border)]">
+                  <div className="flex items-center gap-[var(--space-3)]">
+                    <div className="w-3 h-3 rounded-full bg-[var(--color-warning)]" />
+                    <span className="font-sans font-medium text-[var(--color-text-muted)]">Krebs Cycle</span>
+                  </div>
+                  <span className="font-sans text-[var(--text-caption)] font-bold text-[var(--color-text)] uppercase tracking-wide">
+                    Missed
+                  </span>
+                </div>
+
+              </div>
+            </FadeInSection>
+          </div>
+
+          {/* Text (on left for desktop, top for mobile) */}
+          <div className="flex-1 w-full">
+            <FadeInSection>
+              <h2 className="heading-display mb-[var(--space-6)]">
+                Track what you&apos;ve <span className="italic text-[var(--color-primary)]">actually mastered</span>
+              </h2>
+              <p className="font-sans text-[var(--text-h4)] leading-[var(--lh-body)] text-[var(--color-text-muted)]">
+                Every topic is marked understood, missed, or re-queued — so review time goes to what you don&apos;t know yet, not what you already do.
+              </p>
+            </FadeInSection>
+          </div>
+
+        </div>
+
+      </div>
     </section>
   );
 }

@@ -1,5 +1,6 @@
 import Navbar from "@/components/landing/Navbar";
 import HeroSection from "@/components/landing/HeroSection";
+import ProofSection from "@/components/landing/ProofSection";
 import HowItWorksSection from "@/components/landing/HowItWorksSection";
 import FeaturesSection from "@/components/landing/FeaturesSection";
 import ParentsSection from "@/components/landing/ParentsSection";
@@ -18,53 +19,61 @@ import {
  * color transitions. Each divider's fillColor matches the section
  * below it, bgColor matches the section above.
  */
-export default function Home() {
+export default function LandingPage() {
   return (
-    <>
+    <main className="flex flex-col min-h-screen bg-bg">
       <Navbar />
       <main>
         <HeroSection />
 
-        {/* Hero (bg) → How It Works (bg) — same color, gentle wave for rhythm */}
+        {/* Hero (bg) → Proof (primary) */}
         <WaveDivider
-          fillColor="var(--color-bg)"
           bgColor="var(--color-bg)"
+          fillColor="var(--color-primary)"
+        />
+
+        <ProofSection />
+
+        {/* Proof (primary) → How It Works (bg) */}
+        <WaveDivider
+          bgColor="var(--color-primary)"
+          fillColor="var(--color-bg)"
         />
 
         <HowItWorksSection />
 
         {/* How It Works (bg) → Features (surface) — subtle curve */}
         <SoftCurveDivider
-          fillColor="var(--color-surface)"
           bgColor="var(--color-bg)"
+          fillColor="var(--color-surface)"
         />
 
         <FeaturesSection />
 
         {/* Features (surface) → Parents (bg) — wave, flipped */}
         <WaveDivider
-          fillColor="var(--color-bg)"
           bgColor="var(--color-surface)"
+          fillColor="var(--color-bg)"
         />
 
         <ParentsSection />
 
         {/* Parents (bg) → Guarantee (teal) — dramatic angled cut */}
         <AngledDivider
-          fillColor="#1B4F5C"
           bgColor="var(--color-bg)"
+          fillColor="#1B4F5C"
         />
 
         <GuaranteeSection />
 
         {/* Guarantee (teal) → Footer (dark) — angled, flipped */}
         <AngledDivider
+          bgColor="#1B4F5C"
           fillColor="var(--color-text)"
-          bgColor="#1E5462"
           flip
         />
       </main>
       <Footer />
-    </>
+    </main>
   );
 }

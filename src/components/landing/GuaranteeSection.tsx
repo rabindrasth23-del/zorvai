@@ -1,33 +1,11 @@
-"use client";
-
-import { useRef } from "react";
-import { motion, useInView, useReducedMotion } from "motion/react";
-import { ArrowRight, TrendingUp } from "lucide-react";
+import FadeInSection from "./FadeInSection";
 import Link from "next/link";
-
-const entranceTransition = {
-  type: "spring" as const,
-  stiffness: 200,
-  damping: 25,
-  mass: 1,
-};
-
-const microTransition = {
-  type: "spring" as const,
-  stiffness: 400,
-  damping: 25,
-  mass: 0.5,
-};
+import { ArrowRight, ClipboardEdit, Repeat, ClipboardCheck, Target, Banknote } from "lucide-react";
 
 export default function GuaranteeSection() {
-  const shouldReduceMotion = useReducedMotion();
-  const sectionRef = useRef<HTMLElement>(null);
-  const isInView = useInView(sectionRef, { once: true, margin: "-80px" });
-
   return (
     <section
       id="guarantee"
-      ref={sectionRef}
       aria-labelledby="guarantee-heading"
       style={{
         paddingTop: "var(--space-20)",
@@ -56,7 +34,6 @@ export default function GuaranteeSection() {
           <circle cx="300" cy="300" r="220" stroke="#FFFFFF" strokeWidth="1" />
           <circle cx="300" cy="300" r="160" stroke="#FFFFFF" strokeWidth="0.75" strokeDasharray="8 6" />
           <circle cx="300" cy="300" r="100" stroke="#FFFFFF" strokeWidth="0.5" />
-          {/* Phase node markers */}
           <circle cx="300" cy="20" r="8" fill="#FFFFFF" opacity="0.5" />
           <circle cx="580" cy="300" r="8" fill="#FFFFFF" opacity="0.5" />
           <circle cx="300" cy="580" r="8" fill="#FFFFFF" opacity="0.5" />
@@ -78,96 +55,68 @@ export default function GuaranteeSection() {
         }}
       />
 
-      <div
-        className="guarantee-container"
-        style={{
-          maxWidth: "1200px",
-          margin: "0 auto",
-          padding: "0 var(--space-6)",
-          display: "grid",
-          gap: "var(--space-12)",
-          alignItems: "center",
-          position: "relative",
-          zIndex: 1,
-        }}
-      >
+      <div className="max-w-[1200px] mx-auto px-[var(--space-6)] grid grid-cols-1 md:grid-cols-2 gap-[var(--space-12)] items-center relative z-10">
         {/* --- Left Column: Copy + CTA --- */}
-        <motion.div
-          initial={shouldReduceMotion ? false : { opacity: 0, x: -24 }}
-          animate={isInView ? { opacity: 1, x: 0 } : {}}
-          transition={entranceTransition}
-        >
-          <p
-            style={{
-              fontFamily: "var(--font-inter), system-ui, sans-serif",
-              fontSize: "var(--text-body-sm)",
-              fontWeight: 600,
-              color: "var(--color-accent)",
-              letterSpacing: "0.04em",
-              textTransform: "uppercase",
-              marginBottom: "var(--space-4)",
-            }}
-          >
-            The Guarantee
-          </p>
-
-          <h2
-            id="guarantee-heading"
-            style={{
-              fontFamily: "var(--font-fraunces), Georgia, serif",
-              fontSize: "clamp(1.75rem, 4vw, 2.75rem)",
-              lineHeight: 1.15,
-              fontWeight: 700,
-              color: "#FFFFFF",
-              letterSpacing: "-0.02em",
-              marginBottom: "var(--space-6)",
-            }}
-          >
-            We back it with{" "}
-            <span
+        <div className="flex flex-col items-center md:items-start text-center md:text-left w-full">
+          <FadeInSection>
+            <p
               style={{
+                fontFamily: "var(--font-inter), system-ui, sans-serif",
+                fontSize: "var(--text-body-sm)",
+                fontWeight: 600,
                 color: "var(--color-accent)",
+                letterSpacing: "0.04em",
+                textTransform: "uppercase",
+                marginBottom: "var(--space-4)",
               }}
             >
-              real numbers.
-            </span>
-          </h2>
+              The Guarantee
+            </p>
 
-          <p
-            style={{
-              fontFamily: "var(--font-inter), system-ui, sans-serif",
-              fontSize: "var(--text-body)",
-              lineHeight: 1.7,
-              color: "rgba(255, 255, 255, 0.75)",
-              marginBottom: "var(--space-4)",
-              maxWidth: "460px",
-            }}
-          >
-            Take a baseline quiz. Study with Zorvai. Take a follow-up.
-            If your scores haven&apos;t improved by the agreed amount, you
-            get a full refund.
-          </p>
-          <p
-            style={{
-              fontFamily: "var(--font-inter), system-ui, sans-serif",
-              fontSize: "var(--text-body)",
-              lineHeight: 1.7,
-              color: "rgba(255, 255, 255, 0.6)",
-              marginBottom: "var(--space-8)",
-              maxWidth: "460px",
-            }}
-          >
-            No asterisks, no fine print about &ldquo;engagement minimums.&rdquo;
-            Your improvement is measured, not estimated.
-          </p>
+            <h2
+              id="guarantee-heading"
+              style={{
+                fontFamily: "var(--font-fraunces), Georgia, serif",
+                fontSize: "clamp(1.75rem, 4vw, 2.75rem)",
+                lineHeight: 1.15,
+                fontWeight: 700,
+                color: "#FFFFFF",
+                letterSpacing: "-0.02em",
+                marginBottom: "var(--space-6)",
+              }}
+            >
+              Prove it, or get your <span style={{ color: "var(--color-accent)", fontStyle: "italic" }}>money back.</span>
+            </h2>
+          </FadeInSection>
 
-          {/* CTA */}
-          <motion.div
-            whileHover={shouldReduceMotion ? {} : { scale: 1.02 }}
-            whileTap={shouldReduceMotion ? {} : { scale: 0.97 }}
-            transition={microTransition}
-            style={{ display: "inline-block" }}
-          >
+          <FadeInSection delay={0.1}>
+            <p
+              className="max-w-full md:max-w-[460px]"
+              style={{
+                fontFamily: "var(--font-inter), system-ui, sans-serif",
+                fontSize: "var(--text-body)",
+                lineHeight: 1.7,
+                color: "rgba(255, 255, 255, 0.75)",
+                marginBottom: "var(--space-4)",
+              }}
+            >
+              Take a baseline quiz before you start. Study with Zorvai for the number of sessions we agree on upfront. Take a follow-up quiz. If your score hasn&apos;t improved by the amount we agreed on, you get a full refund.
+            </p>
+            <p
+              className="max-w-full md:max-w-[460px]"
+              style={{
+                fontFamily: "var(--font-inter), system-ui, sans-serif",
+                fontSize: "var(--text-body)",
+                lineHeight: 1.7,
+                color: "rgba(255, 255, 255, 0.6)",
+                marginBottom: "var(--space-8)",
+              }}
+            >
+              The only condition is the one we set together, in writing, before you start: how many sessions, and how much improvement. Nothing hidden beyond that.
+            </p>
+          </FadeInSection>
+
+          <FadeInSection delay={0.2}>
             <Link
               href="/signup"
               style={{
@@ -183,323 +132,100 @@ export default function GuaranteeSection() {
                 borderRadius: "var(--radius-md)",
                 textDecoration: "none",
                 boxShadow: "0 4px 24px rgba(0, 0, 0, 0.2)",
-                transition: "box-shadow 200ms ease",
+                transition: "box-shadow 200ms ease, transform 200ms ease",
               }}
+              className="hover:scale-[1.02] active:scale-[0.97]"
             >
-              Start Learning
+              Start your baseline quiz
               <ArrowRight size={18} strokeWidth={2} />
             </Link>
-          </motion.div>
-        </motion.div>
+          </FadeInSection>
+        </div>
 
-        {/* --- Right Column: Before/After Visual --- */}
-        <motion.div
-          initial={shouldReduceMotion ? false : { opacity: 0, x: 24 }}
-          animate={isInView ? { opacity: 1, x: 0 } : {}}
-          transition={{ ...entranceTransition, delay: 0.15 }}
-          style={{ display: "flex", justifyContent: "center" }}
-        >
-          <div
-            style={{
-              width: "100%",
-              maxWidth: "420px",
-              background: "rgba(255, 255, 255, 0.06)",
-              backdropFilter: "blur(12px)",
-              borderRadius: "var(--radius-lg)",
-              border: "1px solid rgba(255, 255, 255, 0.1)",
-              overflow: "hidden",
-            }}
-          >
-            {/* Card header */}
+        {/* --- Right Column: Process Diagram --- */}
+        <div style={{ display: "flex", justifyContent: "center" }}>
+          <FadeInSection delay={0.2}>
             <div
               style={{
-                padding: "var(--space-4) var(--space-5)",
-                borderBottom: "1px solid rgba(255, 255, 255, 0.08)",
+                width: "100%",
+                maxWidth: "420px",
+                background: "rgba(255, 255, 255, 0.06)",
+                backdropFilter: "blur(12px)",
+                borderRadius: "var(--radius-lg)",
+                border: "1px solid rgba(255, 255, 255, 0.1)",
+                padding: "var(--space-8)",
                 display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
+                flexDirection: "column",
+                gap: "var(--space-4)",
               }}
             >
-              <span
-                style={{
-                  fontFamily: "var(--font-inter), system-ui, sans-serif",
-                  fontSize: "var(--text-body-sm)",
-                  fontWeight: 600,
-                  color: "rgba(255, 255, 255, 0.9)",
-                }}
-              >
-                Improvement Proof
-              </span>
-              <div
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "var(--space-1)",
-                  background: "rgba(74, 155, 127, 0.2)",
-                  padding: "2px 10px",
-                  borderRadius: "var(--radius-full)",
-                }}
-              >
-                <TrendingUp size={13} color="var(--color-success)" strokeWidth={2.5} />
-                <span
-                  className="text-number"
-                  style={{
-                    fontSize: "var(--text-caption)",
-                    fontWeight: 700,
-                    color: "var(--color-success)",
-                  }}
-                >
-                  +27%
+              {/* Step 1 */}
+              <div className="flex items-center gap-[var(--space-4)]">
+                <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center shrink-0">
+                  <ClipboardEdit size={20} className="text-white" />
+                </div>
+                <span className="font-sans text-[var(--text-body)] font-medium text-white">
+                  Baseline Quiz
                 </span>
               </div>
-            </div>
+              
+              {/* Connector line */}
+              <div className="w-0.5 h-6 bg-white/10 ml-[19px]" />
 
-            {/* Before / After comparison */}
-            <div style={{ padding: "var(--space-6) var(--space-5)" }}>
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  gap: "var(--space-4)",
-                }}
-              >
-                {/* Before */}
-                <div style={{ textAlign: "center", flex: 1 }}>
-                  <p
-                    style={{
-                      fontFamily: "var(--font-inter), system-ui, sans-serif",
-                      fontSize: "var(--text-caption)",
-                      fontWeight: 600,
-                      color: "rgba(255, 255, 255, 0.45)",
-                      textTransform: "uppercase",
-                      letterSpacing: "0.06em",
-                      marginBottom: "var(--space-3)",
-                    }}
-                  >
-                    Baseline
-                  </p>
-                  <motion.span
-                    className="text-number"
-                    initial={shouldReduceMotion ? false : { opacity: 0, scale: 0.8 }}
-                    animate={isInView ? { opacity: 1, scale: 1 } : {}}
-                    transition={{ ...entranceTransition, delay: 0.3 }}
-                    style={{
-                      fontSize: "3.5rem",
-                      fontWeight: 700,
-                      color: "rgba(255, 255, 255, 0.5)",
-                      lineHeight: 1,
-                      display: "block",
-                    }}
-                  >
-                    62%
-                  </motion.span>
-                  <p
-                    style={{
-                      fontFamily: "var(--font-inter), system-ui, sans-serif",
-                      fontSize: "var(--text-caption)",
-                      color: "rgba(255, 255, 255, 0.35)",
-                      marginTop: "var(--space-2)",
-                    }}
-                  >
-                    Day 1
-                  </p>
+              {/* Step 2 */}
+              <div className="flex items-center gap-[var(--space-4)]">
+                <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center shrink-0">
+                  <Repeat size={20} className="text-[var(--color-accent)]" />
                 </div>
+                <span className="font-sans text-[var(--text-body)] font-medium text-white">
+                  Study with Zorvai
+                </span>
+              </div>
 
-                {/* Arrow */}
-                <motion.div
-                  initial={shouldReduceMotion ? false : { opacity: 0, x: -8 }}
-                  animate={isInView ? { opacity: 1, x: 0 } : {}}
-                  transition={{ ...entranceTransition, delay: 0.4 }}
-                  style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center",
-                    gap: "var(--space-1)",
-                    flexShrink: 0,
-                  }}
-                >
-                  <ArrowRight
-                    size={24}
-                    color="var(--color-accent)"
-                    strokeWidth={2}
-                  />
-                  <span
-                    style={{
-                      fontFamily: "var(--font-inter), system-ui, sans-serif",
-                      fontSize: "10px",
-                      fontWeight: 600,
-                      color: "rgba(255, 255, 255, 0.35)",
-                      textTransform: "uppercase",
-                      letterSpacing: "0.05em",
-                    }}
-                  >
-                    30 days
+              {/* Connector line */}
+              <div className="w-0.5 h-6 bg-white/10 ml-[19px]" />
+
+              {/* Step 3 */}
+              <div className="flex items-center gap-[var(--space-4)]">
+                <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center shrink-0">
+                  <ClipboardCheck size={20} className="text-white" />
+                </div>
+                <span className="font-sans text-[var(--text-body)] font-medium text-white">
+                  Follow-up Quiz
+                </span>
+              </div>
+
+              {/* Connector line */}
+              <div className="w-0.5 h-6 bg-white/10 ml-[19px]" />
+
+              {/* Step 4: Outcomes */}
+              <div className="grid grid-cols-2 gap-[var(--space-4)] mt-[var(--space-2)]">
+                {/* Hit target */}
+                <div className="bg-white/5 border border-white/10 rounded-[var(--radius-md)] p-[var(--space-4)] flex flex-col items-center gap-[var(--space-2)] text-center">
+                  <Target size={24} className="text-[var(--color-success)]" />
+                  <span className="font-sans text-[var(--text-caption)] font-bold text-white/50 uppercase tracking-wider">
+                    Hit the target
                   </span>
-                </motion.div>
-
-                {/* After */}
-                <div style={{ textAlign: "center", flex: 1 }}>
-                  <p
-                    style={{
-                      fontFamily: "var(--font-inter), system-ui, sans-serif",
-                      fontSize: "var(--text-caption)",
-                      fontWeight: 600,
-                      color: "var(--color-success)",
-                      textTransform: "uppercase",
-                      letterSpacing: "0.06em",
-                      marginBottom: "var(--space-3)",
-                    }}
-                  >
-                    Follow-up
-                  </p>
-                  <motion.span
-                    className="text-number"
-                    initial={shouldReduceMotion ? false : { opacity: 0, scale: 0.8 }}
-                    animate={isInView ? { opacity: 1, scale: 1 } : {}}
-                    transition={{ ...entranceTransition, delay: 0.5 }}
-                    style={{
-                      fontSize: "3.5rem",
-                      fontWeight: 700,
-                      color: "#FFFFFF",
-                      lineHeight: 1,
-                      display: "block",
-                    }}
-                  >
-                    89%
-                  </motion.span>
-                  <p
-                    style={{
-                      fontFamily: "var(--font-inter), system-ui, sans-serif",
-                      fontSize: "var(--text-caption)",
-                      color: "rgba(255, 255, 255, 0.35)",
-                      marginTop: "var(--space-2)",
-                    }}
-                  >
-                    Day 30
-                  </p>
+                  <span className="font-sans text-[var(--text-body-sm)] font-semibold text-white">
+                    Keep going
+                  </span>
+                </div>
+                {/* Missed target */}
+                <div className="bg-white/5 border border-white/10 rounded-[var(--radius-md)] p-[var(--space-4)] flex flex-col items-center gap-[var(--space-2)] text-center">
+                  <Banknote size={24} className="text-[var(--color-warning)]" />
+                  <span className="font-sans text-[var(--text-caption)] font-bold text-white/50 uppercase tracking-wider">
+                    Missed it
+                  </span>
+                  <span className="font-sans text-[var(--text-body-sm)] font-semibold text-white">
+                    Full refund
+                  </span>
                 </div>
               </div>
 
-              {/* Progress bar visual */}
-              <div
-                style={{
-                  marginTop: "var(--space-6)",
-                  position: "relative",
-                }}
-              >
-                {/* Track */}
-                <div
-                  style={{
-                    height: 6,
-                    borderRadius: 3,
-                    background: "rgba(255, 255, 255, 0.08)",
-                    overflow: "hidden",
-                  }}
-                >
-                  <motion.div
-                    initial={{ width: "62%" }}
-                    animate={
-                      isInView
-                        ? { width: "89%" }
-                        : { width: "62%" }
-                    }
-                    transition={{
-                      duration: 1.2,
-                      delay: 0.6,
-                      ease: [0.25, 0.46, 0.45, 0.94],
-                    }}
-                    style={{
-                      height: "100%",
-                      borderRadius: 3,
-                      background:
-                        "linear-gradient(90deg, rgba(255, 255, 255, 0.3), var(--color-success))",
-                    }}
-                  />
-                </div>
-              </div>
             </div>
-
-            {/* Bottom — subject breakdown */}
-            <div
-              style={{
-                padding: "var(--space-4) var(--space-5)",
-                borderTop: "1px solid rgba(255, 255, 255, 0.08)",
-                display: "flex",
-                justifyContent: "space-between",
-                gap: "var(--space-3)",
-              }}
-            >
-              {[
-                { subject: "Math", before: 58, after: 84 },
-                { subject: "Science", before: 65, after: 91 },
-                { subject: "English", before: 70, after: 93 },
-              ].map((item) => (
-                <div
-                  key={item.subject}
-                  style={{ textAlign: "center", flex: 1 }}
-                >
-                  <p
-                    style={{
-                      fontFamily: "var(--font-inter), system-ui, sans-serif",
-                      fontSize: "11px",
-                      fontWeight: 500,
-                      color: "rgba(255, 255, 255, 0.4)",
-                      marginBottom: "var(--space-1)",
-                    }}
-                  >
-                    {item.subject}
-                  </p>
-                  <p
-                    className="text-number"
-                    style={{
-                      fontSize: "var(--text-body-sm)",
-                      fontWeight: 600,
-                      color: "rgba(255, 255, 255, 0.85)",
-                    }}
-                  >
-                    <span style={{ color: "rgba(255, 255, 255, 0.4)" }}>
-                      {item.before}
-                    </span>
-                    <span
-                      style={{
-                        color: "rgba(255, 255, 255, 0.3)",
-                        margin: "0 3px",
-                      }}
-                    >
-                      →
-                    </span>
-                    <span style={{ color: "var(--color-success)" }}>
-                      {item.after}%
-                    </span>
-                  </p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </motion.div>
+          </FadeInSection>
+        </div>
       </div>
-
-      {/* Responsive */}
-      <style>{`
-        .guarantee-container {
-          grid-template-columns: 1fr 1fr;
-        }
-        @media (max-width: 768px) {
-          .guarantee-container {
-            grid-template-columns: 1fr;
-            text-align: center;
-          }
-          .guarantee-container > div:first-child {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-          }
-          .guarantee-container p {
-            max-width: 100% !important;
-          }
-        }
-      `}</style>
     </section>
   );
 }

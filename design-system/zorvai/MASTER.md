@@ -77,6 +77,8 @@ Dark mode maintains the same hue relationships — not a simple gray inversion.
 3. **Success (#4A9B7F)** for earned achievements only — "mastered" badge, quiz passed, streak maintained
 4. **Warning (#D97757)** reads calm, not alarming — used in check-in Tier 1/2 states specifically. Never use red/destructive for check-in states
 5. **Contrast minimum:** 4.5:1 for all text. Check dark mode variants independently
+6. **Tailwind Utilities:** Colors are mapped to Tailwind theme. Prefer `bg-primary`, `text-accent`, etc. over `bg-[var(--color-primary)]` for new components.
+
 
 ---
 
@@ -127,7 +129,8 @@ const geistMono = Geist_Mono({
 
 | Token | Size | Line Height | Weight | Font | Usage |
 |-------|------|-------------|--------|------|-------|
-| `--text-display` | `3rem` / 48px | 1.1 | 700 | Fraunces | Hero headlines, major page titles |
+| `--text-display-xl` | `4.5rem` / 72px (scales down to 3rem on mobile) | 1.1 | 700 | Fraunces | Hero headlines, massive viewport elements |
+| `--text-display` | `3rem` / 48px | 1.1 | 700 | Fraunces | Major page titles |
 | `--text-h1` | `2.25rem` / 36px | 1.2 | 600 | Fraunces | Page titles, section headers |
 | `--text-h2` | `1.75rem` / 28px | 1.25 | 600 | Fraunces | Section subheadings |
 | `--text-h3` | `1.375rem` / 22px | 1.3 | 600 | Fraunces | Card titles, subsection heads |
@@ -270,6 +273,13 @@ const checkinTransition = {
 // ❌ any celebration/confetti/burst
 ```
 
+### Semantic State Accessibility
+
+**Color is NEVER the only indicator of a state change.**
+- "Mastered", "Missed", or "Error" states must include a secondary visual indicator: an icon, a distinct shape, or an explicit text label. 
+- Do not rely solely on `--color-success` or `--color-warning` to communicate meaning, especially on dense dashboards.
+
+
 ### Reduced Motion
 
 ```tsx
@@ -405,6 +415,12 @@ const shouldReduceMotion = useReducedMotion();
 - Full-bleed sections: no max-width, content inside is still constrained
 - Session flow (Learn/Recall/Challenge/Feedback): `max-width: 720px` — focused, reading-optimized width
 
+### Fixed Elements & Offsets
+
+- **Navbar:** The fixed navbar height is defined globally as `--nav-height` (5rem).
+- `scroll-padding-top` is applied globally so anchor links jump to the correct offset below the navbar. Do not manually pad anchor targets.
+
+
 ### Variance 6 Layout Principles
 
 1. **Asymmetric hero:** Hero sections may use 55/45 or 60/40 splits, not always centered
@@ -446,17 +462,21 @@ const shouldReduceMotion = useReducedMotion();
 Before delivering any UI code, verify:
 
 - [ ] All colors use CSS custom properties, not hardcoded hex
+- [ ] Prefer Tailwind classes (`bg-primary`) over arbitrary wrappers (`bg-[var(--color-primary)]`)
 - [ ] Fraunces on headings, Inter on body, Geist Mono on numbers — no font drift
 - [ ] No emojis as icons (Lucide React only)
 - [ ] `cursor-pointer` on all clickable elements
 - [ ] Hover states with smooth transitions (150–300ms)
 - [ ] Light mode: text contrast 4.5:1 minimum (check --color-text on --color-bg specifically)
 - [ ] Dark mode: contrast checked independently
+- [ ] Semantic states use secondary indicators (icons/text), not just color
 - [ ] Focus rings visible for keyboard navigation (var(--color-ring))
 - [ ] `prefers-reduced-motion` respected — every motion component
 - [ ] Responsive: 375px → 768px → 1024px → 1440px
 - [ ] No content hidden behind fixed navbars
 - [ ] No horizontal scroll on mobile
+- [ ] All images have descriptive `alt` text
+- [ ] All form inputs have explicit labels or `aria-label`
 - [ ] `"use client"` only on the smallest possible component, never on pages/layouts
 - [ ] Check-in flow uses calm motion only — no spring, no celebration
 - [ ] Warm shadows (not pure rgba(0,0,0,...)) — matches palette
