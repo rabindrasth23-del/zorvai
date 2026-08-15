@@ -12,7 +12,7 @@ export default function RecallRibbon() {
   const marqueeTransition = {
     duration: 60,
     repeat: Infinity,
-    ease: "linear",
+    ease: "linear" as const,
   };
 
   return (
