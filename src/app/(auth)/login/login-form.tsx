@@ -21,7 +21,6 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 export function LoginForm() {
   const [serverError, setServerError] = React.useState<string | null>(null);
   const [showPassword, setShowPassword] = React.useState(false);
-  const supabase = createClient();
   
   const {
     register,
@@ -47,6 +46,7 @@ export function LoginForm() {
 
   const handleGoogleSignIn = async () => {
     setServerError(null);
+    const supabase = createClient();
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {

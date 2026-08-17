@@ -27,7 +27,6 @@ export function SignupForm() {
   const [needsConfirmation, setNeedsConfirmation] = React.useState(false);
   const [showPassword, setShowPassword] = React.useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = React.useState(false);
-  const supabase = createClient();
   
   const {
     register,
@@ -56,6 +55,7 @@ export function SignupForm() {
 
   const handleGoogleSignIn = async () => {
     setServerError(null);
+    const supabase = createClient();
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
