@@ -39,3 +39,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# mcp configs (contains api keys)
+.cursor/mcp.json
+.agents/mcp_config.json

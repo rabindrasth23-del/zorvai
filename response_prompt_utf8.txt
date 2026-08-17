@@ -1,0 +1,1 @@
+﻿You've reached the free 21st component-code limit (2/day), resets 2026-08-17T00:00:00.000Z. Component code on 21st is paid; tell the user and share the upgrade link: https://21st.dev/pricing
