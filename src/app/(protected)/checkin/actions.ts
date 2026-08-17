@@ -15,7 +15,7 @@ export async function submitCheckinAction(payload: z.infer<typeof checkinSchema>
   if (!validatedFields.success) {
     return {
       status: "error",
-      error: validatedFields.error.errors[0].message,
+      error: validatedFields.error.issues[0]?.message || "Validation failed",
     };
   }
 

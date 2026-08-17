@@ -8,9 +8,10 @@ export const metadata = {
 
 export default function ResetPasswordPage() {
   return (
-    <AuthLayout
-      title="Reset your password"
-      description="Enter your email and we'll send you a link to get back in."
+    <AuthLayout 
+      title="Reset Password"
+      description="Enter your email to receive a password reset link."
+      heroImageSrc="/auth-bg.png"
     >
       <ResetPasswordForm />
     </AuthLayout>

@@ -24,9 +24,10 @@ export default async function UpdatePasswordPage() {
   }
 
   return (
-    <AuthLayout
-      title="Set a new password"
-      description="Choose a new password to finish resetting your account."
+    <AuthLayout 
+      title="Update Password"
+      description="Please enter your new password below."
+      heroImageSrc="/auth-bg.png"
     >
       <UpdatePasswordForm />
     </AuthLayout>
