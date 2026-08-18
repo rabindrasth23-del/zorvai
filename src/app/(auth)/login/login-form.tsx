@@ -7,6 +7,7 @@ import * as z from "zod";
 import { Loader2, Eye, EyeOff } from "lucide-react";
 import { loginAction } from "@/app/actions/auth";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { GlassInputWrapper, GoogleIcon } from "@/components/ui/auth-components";
 
@@ -19,6 +20,7 @@ const loginSchema = z.object({
 type LoginFormValues = z.infer<typeof loginSchema>;
 
 export function LoginForm() {
+  const router = useRouter();
   const [serverError, setServerError] = React.useState<string | null>(null);
   const [showPassword, setShowPassword] = React.useState(false);
   
@@ -41,6 +43,8 @@ export function LoginForm() {
     
     if (result?.error) {
       setServerError(result.error);
+    } else if (result?.redirectTo) {
+      router.push(result.redirectTo);
     }
   };
 

@@ -7,6 +7,7 @@ import * as z from "zod";
 import { Loader2, Eye, EyeOff } from "lucide-react";
 import { signupAction } from "@/app/actions/auth";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { GlassInputWrapper, GoogleIcon } from "@/components/ui/auth-components";
 
@@ -23,6 +24,7 @@ const signupSchema = z.object({
 type SignupFormValues = z.infer<typeof signupSchema>;
 
 export function SignupForm() {
+  const router = useRouter();
   const [serverError, setServerError] = React.useState<string | null>(null);
   const [needsConfirmation, setNeedsConfirmation] = React.useState(false);
   const [showPassword, setShowPassword] = React.useState(false);
@@ -50,6 +52,8 @@ export function SignupForm() {
       setServerError(result.error);
     } else if (result?.requireEmailConfirmation) {
       setNeedsConfirmation(true);
+    } else if (result?.redirectTo) {
+      router.push(result.redirectTo);
     }
   };
 
@@ -70,12 +74,24 @@ export function SignupForm() {
   if (needsConfirmation) {
     return (
       <div className="flex flex-col items-center justify-center p-8 bg-[var(--color-surface)]/40 backdrop-blur-xl border border-border rounded-[var(--radius-xl)] shadow-lg max-w-md mx-auto text-center gap-4 animate-element">
+        <div className="w-16 h-16 rounded-full bg-[var(--color-primary)]/10 flex items-center justify-center">
+          <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <rect width="20" height="16" x="2" y="4" rx="2"/>
+            <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+          </svg>
+        </div>
         <h3 className="font-display font-semibold text-[var(--text-h3)] text-[var(--color-text)]">
           Check your email
         </h3>
         <p className="font-sans text-[var(--text-body)] text-[var(--color-text-muted)]">
-          We&apos;ve sent a confirmation link to your email. Please verify your account to continue.
+          We&apos;ve sent a confirmation link to your email. Click it to activate your account, then come back and sign in.
         </p>
+        <Link 
+          href="/login" 
+          className="mt-4 text-[var(--color-primary)] font-medium hover:underline transition-colors font-sans"
+        >
+          Go to Sign In
+        </Link>
       </div>
     );
   }

@@ -6,6 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Loader2, Eye, EyeOff } from "lucide-react";
 import { updatePasswordAction } from "@/app/actions/auth";
+import { useRouter } from "next/navigation";
 import { GlassInputWrapper } from "@/components/ui/auth-components";
 
 const updatePasswordSchema = z.object({
@@ -19,6 +20,7 @@ const updatePasswordSchema = z.object({
 type UpdatePasswordFormValues = z.infer<typeof updatePasswordSchema>;
 
 export function UpdatePasswordForm() {
+  const router = useRouter();
   const [serverError, setServerError] = React.useState<string | null>(null);
   const [showPassword, setShowPassword] = React.useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = React.useState(false);
@@ -41,6 +43,8 @@ export function UpdatePasswordForm() {
     
     if (result?.error) {
       setServerError(result.error);
+    } else if (result?.redirectTo) {
+      router.push(result.redirectTo);
     }
   };
 
