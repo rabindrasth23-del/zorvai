@@ -27,14 +27,20 @@ export default function Navbar() {
             Zorvai
           </Link>
 
-          {/* Desktop Role Toggle */}
-          <div className="hidden md:block">
+          {/* Role Toggle */}
+          <div className="flex items-center">
             <RoleToggle />
           </div>
         </div>
 
         {/* Desktop Nav Actions */}
         <div className="hidden md:flex items-center gap-[var(--space-6)]">
+          <Link
+            href="/login"
+            className="font-sans text-[var(--text-body-sm)] font-semibold text-[var(--color-text)] no-underline hover:text-[var(--color-primary)] transition-colors duration-200"
+          >
+            Sign in
+          </Link>
           <Link
             href="#pricing"
             className="font-sans text-[var(--text-body-sm)] font-medium text-[var(--color-text)] no-underline hover:text-[var(--color-primary)] transition-colors duration-200"

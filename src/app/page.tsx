@@ -3,8 +3,11 @@ import HeroSection from "@/components/landing/HeroSection";
 import ProofSection from "@/components/landing/ProofSection";
 import HowItWorksSection from "@/components/landing/HowItWorksSection";
 import FeaturesSection from "@/components/landing/FeaturesSection";
-import ParentsSection from "@/components/landing/ParentsSection";
+import EarlyAdopterCTA from "@/components/landing/EarlyAdopterCTA";
+import FounderStorySection from "@/components/landing/FounderStorySection";
 import GuaranteeSection from "@/components/landing/GuaranteeSection";
+import WaitlistBanner from "@/components/landing/WaitlistBanner";
+import WaitlistSection from "@/components/landing/WaitlistSection";
 import Footer from "@/components/landing/Footer";
 import {
   WaveDivider,
@@ -23,6 +26,7 @@ export default function LandingPage() {
   return (
     <main className="flex flex-col min-h-screen bg-bg">
       <Navbar />
+      <WaitlistBanner />
       <main>
         <HeroSection />
 
@@ -50,27 +54,43 @@ export default function LandingPage() {
 
         <FeaturesSection />
 
-        {/* Features (surface) → Parents (bg) — wave, flipped */}
+        {/* Features (surface) → Early Adopter CTA (dark) — wave, flipped */}
         <WaveDivider
           bgColor="var(--color-surface)"
-          fillColor="var(--color-bg)"
+          fillColor="var(--color-text)"
         />
 
-        <ParentsSection />
+        <EarlyAdopterCTA />
 
-        {/* Parents (bg) → Guarantee (teal) — dramatic angled cut */}
+        {/* Early Adopter CTA (dark) → Guarantee (teal) — dramatic angled cut */}
         <AngledDivider
-          bgColor="var(--color-bg)"
+          bgColor="var(--color-text)"
           fillColor="#1B4F5C"
         />
 
         <GuaranteeSection />
 
-        {/* Guarantee (teal) → Footer (dark) — angled, flipped */}
+        {/* Guarantee (teal) → Founder Story (surface) — angled, flipped */}
         <AngledDivider
           bgColor="#1B4F5C"
-          fillColor="var(--color-text)"
+          fillColor="var(--color-surface)"
           flip
+        />
+
+        <FounderStorySection />
+
+        {/* Founder Story (surface) → Waitlist (bg) — curve */}
+        <SoftCurveDivider
+          bgColor="var(--color-surface)"
+          fillColor="var(--color-bg)"
+        />
+
+        <WaitlistSection />
+
+        {/* Waitlist (bg) → Footer (dark) — wave */}
+        <WaveDivider
+          bgColor="var(--color-bg)"
+          fillColor="var(--color-text)"
         />
       </main>
       <Footer />

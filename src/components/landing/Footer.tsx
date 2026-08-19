@@ -8,33 +8,31 @@ export default function Footer() {
       title: "GET STARTED",
       links: [
         { label: "Pricing", href: "#pricing" },
-        { label: "Privacy & Security", href: "#" },
-        { label: "The guarantee", href: "#" },
-        { label: "Parent dashboard", href: "#" },
+        { label: "Privacy & Security", href: "/privacy" },
+        { label: "The guarantee", href: "/guarantee" },
+        { label: "Parent dashboard", href: "#waitlist" },
       ],
     },
     {
       title: "STUDENTS",
       links: [
-        { label: "Exam prep", href: "#" },
-        { label: "School subjects", href: "#" },
-        { label: "Programming", href: "#" },
-        { label: "Medicine track", href: "#" },
+        { label: "Exam prep", href: "/signup?track=exam" },
+        { label: "School subjects", href: "/signup?track=school" },
+        { label: "Programming", href: "/signup?track=programming" },
+        { label: "Medicine track", href: "/signup?track=medicine" },
       ],
     },
     {
       title: "RESOURCES",
       links: [
         { label: "How it works", href: "#how-it-works" },
-        { label: "Blog", href: "#" },
-        { label: "Help center", href: "#" },
+        { label: "Help center", href: "mailto:help@zorvai.ai" },
       ],
     },
     {
       title: "COMPANY",
       links: [
-        { label: "About", href: "#" },
-        { label: "Contact", href: "#" },
+        { label: "Contact", href: "mailto:help@zorvai.ai" },
       ],
     },
   ];
@@ -72,10 +70,10 @@ export default function Footer() {
               See real progress, not just screen time.
             </p>
             <Link
-              href="/signup-parent"
+              href="#waitlist"
               className="inline-flex items-center gap-[var(--space-2)] font-sans text-[var(--text-body-sm)] font-semibold text-white bg-[var(--color-surface)]/20 border border-white/20 px-[var(--space-6)] py-[var(--space-3)] rounded-[var(--radius-full)] hover:bg-[var(--color-surface)]/30 hover:-translate-y-[1px] transition-all duration-200 mt-auto"
             >
-              Create parent account
+              Join waitlist
               <ArrowRight size={16} />
             </Link>
           </div>

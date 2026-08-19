@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "motion/react";
 import { Menu, X } from "lucide-react";
 import Link from "next/link";
-import RoleToggle from "./RoleToggle";
+
 
 const navLinks = [
   { label: "Pricing", href: "#pricing" },
@@ -70,8 +70,14 @@ export default function MobileNav() {
                 </button>
               </div>
 
-              <div className="mb-[var(--space-8)]">
-                <RoleToggle />
+              <div className="mb-[var(--space-6)] flex justify-end">
+                <Link
+                  href="/login"
+                  onClick={() => setMobileOpen(false)}
+                  className="font-sans text-[var(--text-body)] font-semibold text-[var(--color-primary)] no-underline px-[var(--space-2)]"
+                >
+                  Sign in
+                </Link>
               </div>
 
               <nav className="flex flex-col gap-[var(--space-1)]">

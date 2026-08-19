@@ -6,7 +6,7 @@ import { AudioLines } from "lucide-react";
 export default function RecallRibbon() {
   const shouldReduceMotion = useReducedMotion();
 
-  const textContent = "So the mitochondria is the powerhouse of the cell because it generates most of the chemical energy needed to power the cell's biochemical reactions, and honestly the whole thing's been kind of chaotic, like nobody really knows what's going on so you can check in with them and see if the notes from yesterday's meeting were sent out... ";
+  const textContent = "Okay so... mitochondria is the powerhouse of the cell — it produces ATP through cellular respiration. There are two main stages, glycolysis happens in the cytoplasm and then the Krebs cycle happens in the mitochondria itself. I think oxygen is needed for the second stage but not the first... the electron transport chain is what actually makes most of the ATP. I'm not 100% sure about the exact numbers but I think it's like 36 or 38 ATP molecules per glucose. The main difference between aerobic and anaerobic is whether oxygen is available — without it you only get 2 ATP... ";
   const contentBlock = `${textContent} ${textContent}`;
 
   const marqueeTransition = {
