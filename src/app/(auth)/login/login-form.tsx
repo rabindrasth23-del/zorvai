@@ -27,11 +27,19 @@ export function LoginForm() {
   const {
     register,
     handleSubmit,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     shouldFocusError: true, 
   });
+
+  React.useEffect(() => {
+    const savedEmail = localStorage.getItem("zorvai_saved_email");
+    if (savedEmail) {
+      setValue("email", savedEmail);
+    }
+  }, [setValue]);
 
   const onSubmit = async (data: LoginFormValues) => {
     setServerError(null);
@@ -44,6 +52,7 @@ export function LoginForm() {
     if (result?.error) {
       setServerError(result.error);
     } else if (result?.redirectTo) {
+      localStorage.setItem("zorvai_saved_email", data.email);
       router.push(result.redirectTo);
     }
   };

@@ -15,7 +15,8 @@ const signupSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
   email: z.string().email("Please enter a valid email address"),
   password: z.string().min(6, "Password must be at least 6 characters"),
-  confirmPassword: z.string()
+  confirmPassword: z.string(),
+  inviteCode: z.string().optional(),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords do not match",
   path: ["confirmPassword"],
@@ -29,6 +30,7 @@ export function SignupForm() {
   const [needsConfirmation, setNeedsConfirmation] = React.useState(false);
   const [showPassword, setShowPassword] = React.useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = React.useState(false);
+  const [role, setRole] = React.useState<"student" | "parent">("student");
   
   const {
     register,
@@ -45,14 +47,20 @@ export function SignupForm() {
     formData.append("name", data.name);
     formData.append("email", data.email);
     formData.append("password", data.password);
+    formData.append("role", role);
+    if (role === "parent" && data.inviteCode) {
+      formData.append("invite_code", data.inviteCode);
+    }
     
     const result = await signupAction(formData);
     
     if (result?.error) {
       setServerError(result.error);
     } else if (result?.requireEmailConfirmation) {
+      localStorage.setItem("zorvai_saved_email", data.email);
       setNeedsConfirmation(true);
     } else if (result?.redirectTo) {
+      localStorage.setItem("zorvai_saved_email", data.email);
       router.push(result.redirectTo);
     }
   };
@@ -99,6 +107,63 @@ export function SignupForm() {
   return (
     <div className="w-full">
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+
+        {/* Role Toggle */}
+        <div className="animate-element animate-delay-200 flex rounded-2xl border border-border overflow-hidden">
+          <button
+            type="button"
+            onClick={() => setRole("student")}
+            className={`flex-1 py-3 text-center font-sans text-[var(--text-body-sm)] font-medium transition-colors duration-200 ${
+              role === "student"
+                ? "bg-[var(--color-primary)] text-[var(--color-on-primary)]"
+                : "bg-transparent text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
+            }`}
+          >
+            I&apos;m a Student
+          </button>
+          <button
+            type="button"
+            onClick={() => setRole("parent")}
+            className={`flex-1 py-3 text-center font-sans text-[var(--text-body-sm)] font-medium transition-colors duration-200 ${
+              role === "parent"
+                ? "bg-[var(--color-primary)] text-[var(--color-on-primary)]"
+                : "bg-transparent text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
+            }`}
+          >
+            I&apos;m a Parent
+          </button>
+        </div>
+
+        {/* Invite Code (parent only) */}
+        {role === "parent" && (
+          <div className="animate-element animate-delay-250 space-y-1.5">
+            <label htmlFor="inviteCode" className="text-[var(--text-body-sm)] font-medium text-[var(--color-text-muted)]">
+              Student Invite Code
+            </label>
+            <GlassInputWrapper hasError={!!errors.inviteCode}>
+              <input
+                id="inviteCode"
+                type="text"
+                placeholder="Enter your student's invite code"
+                {...register("inviteCode", {
+                  required: role === "parent" ? "Invite code is required" : false,
+                })}
+                aria-invalid={!!errors.inviteCode}
+                aria-describedby={errors.inviteCode ? "inviteCode-error" : "inviteCode-hint"}
+                className="w-full bg-transparent text-[var(--text-body)] text-[var(--color-text)] p-4 rounded-2xl focus:outline-none"
+              />
+            </GlassInputWrapper>
+            {errors.inviteCode ? (
+              <span id="inviteCode-error" className="text-[var(--text-caption)] font-sans text-[var(--color-destructive)] block ml-1">
+                {errors.inviteCode.message}
+              </span>
+            ) : (
+              <span id="inviteCode-hint" className="text-[var(--text-caption)] font-sans text-[var(--color-text-muted)] block ml-1">
+                Ask your student to share this from their dashboard
+              </span>
+            )}
+          </div>
+        )}
         
         {serverError && (
           <div 

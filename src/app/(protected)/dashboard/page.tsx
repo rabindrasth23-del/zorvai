@@ -1,9 +1,11 @@
 import { StatCard } from "@/components/ui/stat-card";
 import { DataTable } from "@/components/ui/data-table";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { CalendarCheck2, Activity } from "lucide-react";
+import { InviteCodeCard, LinkNotificationBanner } from "@/components/dashboard/parent-link-widgets";
 
 // DataTable columns matched against real `sessions`, `plan_topics`, and `session_results` schema
 const columns = [
@@ -20,10 +22,10 @@ export default async function DashboardPage() {
 
   if (!user) return null; // Handled by layout guard
 
-  // Fetch the actual student profile including subjects
+  // Fetch the actual student profile including subjects and invite_code
   const { data: student, error } = await supabase
     .from('students')
-    .select('name, study_hours_per_day, subjects')
+    .select('name, study_hours_per_day, subjects, invite_code')
     .eq('id', user.id)
     .single();
 
@@ -37,6 +39,32 @@ export default async function DashboardPage() {
   const studentName = student.name || "Student";
   const targetHours = student.study_hours_per_day ?? 0;
   const subjects = student.subjects || [];
+  const inviteCode = student.invite_code || "";
+
+  // Check for unnotified parent links (for the "a parent linked" banner)
+  const admin = createAdminClient();
+  const { data: unnotifiedLinks } = await admin
+    .from('student_parent_links')
+    .select('id, parent_id, created_at')
+    .eq('student_id', user.id)
+    .eq('student_notified', false);
+
+  // Fetch parent names for any unnotified links
+  const linkBanners: Array<{ linkId: string; parentName: string; linkedAt: string }> = [];
+  if (unnotifiedLinks && unnotifiedLinks.length > 0) {
+    for (const link of unnotifiedLinks) {
+      const { data: parentRow } = await admin
+        .from('parents')
+        .select('name')
+        .eq('id', link.parent_id)
+        .single();
+      linkBanners.push({
+        linkId: link.id,
+        parentName: parentRow?.name || 'A parent',
+        linkedAt: link.created_at,
+      });
+    }
+  }
 
   // Check if they have any sessions yet to drive the empty state
   const { count: sessionCount, error: countError } = await supabase
@@ -50,7 +78,18 @@ export default async function DashboardPage() {
   const sessionsList: any[] = [];
 
   return (
-    <div className="flex flex-col gap-12 animate-element h-full max-w-5xl mx-auto pb-16">
+    <div className="flex flex-col gap-12 animate-element h-full max-w-5xl mx-auto pb-16 px-4">
+
+      {/* Link notification banners */}
+      {linkBanners.map((b) => (
+        <LinkNotificationBanner
+          key={b.linkId}
+          linkId={b.linkId}
+          parentName={b.parentName}
+          linkedAt={b.linkedAt}
+        />
+      ))}
+
       <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 pt-4">
         <div>
           <h1 className="text-3xl md:text-4xl font-display text-[var(--color-text)] tracking-tight">
@@ -126,6 +165,14 @@ export default async function DashboardPage() {
           )}
         </section>
       </div>
+
+      {/* INVITE CODE for parent linking */}
+      <section>
+        <h2 className="text-xl font-display font-medium text-[var(--color-text)] mb-4">
+          Parent Linking
+        </h2>
+        <InviteCodeCard code={inviteCode} />
+      </section>
     </div>
   );
 }

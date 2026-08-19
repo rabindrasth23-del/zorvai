@@ -32,6 +32,27 @@ export async function signupAction(formData: FormData) {
   const email = formData.get("email") as string;
   const password = formData.get("password") as string;
   const name = formData.get("name") as string;
+  const role = (formData.get("role") as string) || "student";
+  const inviteCode = formData.get("invite_code") as string | null;
+
+  // If signing up as a parent, validate the invite code exists BEFORE creating the auth user
+  if (role === "parent") {
+    if (!inviteCode || inviteCode.trim().length === 0) {
+      return { error: "Invite code is required for parent accounts." };
+    }
+
+    const { createAdminClient } = await import("@/lib/supabase/admin");
+    const admin = createAdminClient();
+    const { data: studentRow } = await admin
+      .from("students")
+      .select("id")
+      .eq("invite_code", inviteCode.trim().toLowerCase())
+      .single();
+
+    if (!studentRow) {
+      return { error: "Invalid invite code. Ask your student to share their code from their dashboard." };
+    }
+  }
 
   const supabase = await createSupabaseServer();
 
@@ -41,6 +62,7 @@ export async function signupAction(formData: FormData) {
     options: {
       data: {
         full_name: name,
+        role: role,
       },
     },
   });
@@ -54,7 +76,10 @@ export async function signupAction(formData: FormData) {
     return { success: true, requireEmailConfirmation: true };
   }
 
-  // Session exists — auto-confirmed, redirect to onboarding
+  // Session exists — auto-confirmed, redirect based on role
+  if (role === "parent") {
+    return { success: true, redirectTo: "/parent/onboarding" };
+  }
   return { success: true, redirectTo: "/onboarding" };
 }
 
