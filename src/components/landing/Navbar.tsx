@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import NavScrollWrapper from "./NavScrollWrapper";
 import RoleToggle from "./RoleToggle";
 import MobileNav from "./MobileNav";
@@ -12,8 +13,17 @@ export default function Navbar() {
           {/* Logo */}
           <Link
             href="/"
-            className="font-display text-[1.5rem] font-bold text-[var(--color-primary)] no-underline tracking-[-0.02em]"
+            className="flex items-center gap-2 group font-display text-[1.5rem] font-bold text-[var(--color-primary)] no-underline tracking-[-0.02em]"
           >
+            <div className="relative w-8 h-8 transition-transform group-hover:scale-105">
+              <Image 
+                src="/logo.png" 
+                alt="Zorvai Logo" 
+                fill 
+                className="object-contain"
+                priority
+              />
+            </div>
             Zorvai
           </Link>
 

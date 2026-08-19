@@ -41,12 +41,25 @@ export const metadata: Metadata = {
     "spaced repetition",
     "active recall",
   ],
+  icons: {
+    icon: "/logo.png",
+    shortcut: "/logo.png",
+    apple: "/logo.png",
+  },
   openGraph: {
     type: "website",
     siteName: "Zorvai",
     title: "Zorvai — AI Study Coach",
     description:
       "AI-powered study coaching with a structured learning cycle. Real improvement, guaranteed.",
+    images: [
+      {
+        url: "/logo.png",
+        width: 1200,
+        height: 630,
+        alt: "Zorvai Logo",
+      },
+    ],
   },
 };
 

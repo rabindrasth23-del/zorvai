@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { ArrowRight } from "lucide-react";
 
 export default function Footer() {
@@ -106,7 +107,10 @@ export default function Footer() {
 
         {/* Bottom Bar */}
         <div className="flex flex-col md:flex-row items-center justify-between pt-[var(--space-8)] border-t border-white/10 gap-[var(--space-4)] text-center md:text-left">
-          <div className="font-display text-[1.25rem] font-bold text-white tracking-[-0.02em]">
+          <div className="flex items-center gap-2 font-display text-[1.25rem] font-bold text-white tracking-[-0.02em]">
+            <div className="relative w-6 h-6">
+              <Image src="/logo.png" alt="Zorvai Logo" fill className="object-contain drop-shadow-md" />
+            </div>
             Zorvai
           </div>
           <div className="font-sans text-[var(--text-caption)] text-white/50">

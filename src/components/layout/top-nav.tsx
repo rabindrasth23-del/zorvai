@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { LogOut } from "lucide-react";
@@ -18,10 +19,14 @@ export function TopNav() {
   return (
     <nav className="w-full flex items-center justify-between py-6 px-4 md:px-8 max-w-7xl mx-auto">
       <Link href="/dashboard" className="flex items-center gap-2 group">
-        <div className="w-8 h-8 rounded-lg bg-[var(--color-primary)] flex items-center justify-center transition-transform group-hover:scale-105">
-          <span className="text-[var(--color-bg)] font-display font-bold text-lg leading-none">
-            Z
-          </span>
+        <div className="relative w-10 h-10 transition-transform group-hover:scale-105">
+          <Image 
+            src="/logo.png" 
+            alt="Zorvai Logo" 
+            fill 
+            className="object-contain"
+            priority
+          />
         </div>
         <span className="font-display font-semibold text-xl tracking-tight text-[var(--color-text)]">
           Zorvai
