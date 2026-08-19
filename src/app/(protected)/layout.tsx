@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { cookies, headers } from "next/headers";
+import { AppSidebar } from "@/components/dashboard/app-sidebar";
 
 export default async function ProtectedLayout({
   children,
@@ -91,8 +92,11 @@ export default async function ProtectedLayout({
   }
 
   return (
-    <div className="min-h-screen bg-[var(--color-bg)] flex flex-col">
-      <main className="flex-1 flex flex-col w-full">
+    <div className="min-h-screen bg-[var(--color-bg)] flex flex-col md:flex-row">
+      {(!isStudentOnboarding && !isParentOnboarding) && (
+        <AppSidebar />
+      )}
+      <main className="flex-1 flex flex-col w-full h-screen overflow-y-auto">
         {children}
       </main>
     </div>
