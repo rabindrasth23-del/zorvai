@@ -9619,3 +9619,77 @@ Steps to integrate
  1. Install external dependencies
  2. Fill image assets with Unsplash stock images you know exist
  3. Use lucide-react icons for svgs or logos if component requires them
+
+---
+
+## 5. Dashboard (student-facing shell/layout)
+
+### Student Dashboard Layout Sidebar
+*Paste prompt here...*
+
+### Stat Card with Trend Indicator
+*Paste prompt here...*
+
+### Session History Table
+*Paste prompt here...*
+
+### Linear Progress Bar with Label
+*Paste prompt here...*
+
+### Circular Progress Ring Percentage
+*Paste prompt here...*
+
+### Tabs Navigation Pills Dashboard
+*Paste prompt here...*
+
+---
+
+## 6. Pricing
+
+### Pricing Table Three Tiers
+*Paste prompt here...*
+
+### Pricing Card with Feature List
+*Paste prompt here...*
+
+### Pricing Toggle Monthly Yearly
+*Paste prompt here...*
+
+### Comparison Table Pricing Plans
+*Paste prompt here...*
+
+---
+
+## 7. Parent Dashboard (parent-facing)
+
+### Parent Monitoring Dashboard
+*Paste prompt here...*
+
+### Weekly Report Summary Card
+*Paste prompt here...*
+
+### Guarantee Status Tracker Badge
+*Paste prompt here...*
+
+### Empty State Illustration Card
+*Paste prompt here...*
+
+### Student Profile Stats Card
+*Paste prompt here...*
+
+---
+
+## 8. Admin Dashboard (internal only — not client-facing)
+
+### Admin Dashboard Sidebar Navigation (Shadcn)
+*Paste prompt here...*
+
+### Admin Analytics Overview Panel
+*Paste prompt here...*
+
+### User Management Table Admin
+*Paste prompt here...*
+
+### Data Table with Filters Sorting
+*Paste prompt here...*
+
