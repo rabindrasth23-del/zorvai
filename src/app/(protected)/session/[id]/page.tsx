@@ -37,10 +37,12 @@ export default async function SessionRedirectPage({
   }
 
   // Validate that the phase is a known phase
-  const validPhases = ["learn", "recall", "challenge", "feedback"];
+  const validPhases = ["learn", "recall", "challenge", "feedback", "done"];
   if (!validPhases.includes(session.phase)) {
     throw new Error(`Invalid session phase: ${session.phase}`);
   }
 
-  redirect(`/session/${sessionId}/${session.phase}`);
+  // "done" phase maps to the feedback view
+  const targetPhase = session.phase === "done" ? "feedback" : session.phase;
+  redirect(`/session/${sessionId}/${targetPhase}`);
 }
