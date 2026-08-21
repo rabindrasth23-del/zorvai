@@ -92,7 +92,7 @@ export async function submitCheckinAction(payload: z.infer<typeof checkinSchema>
   // 5. Fetch next pending topic
   // Note: For absolute concurrency safety, a Postgres function (RPC) using SELECT FOR UPDATE would be better.
   // For v1, we select the lowest sort_order pending topic.
-  const { data: topic, error: topicError } = await supabase
+  let { data: topic, error: topicError } = await supabase
     .from("plan_topics")
     .select("id")
     .eq("plan_id", activePlanId)
@@ -106,11 +106,29 @@ export async function submitCheckinAction(payload: z.infer<typeof checkinSchema>
   }
 
   if (!topic) {
-    // Queue is exhausted / no pending topics left.
-    return {
-      status: "empty_queue",
-      error: "You've finished your current plan! Generate a new one to continue studying."
-    };
+    // TODO(PLAN-MAKER-STUB): Remove this when the real Plan Maker is built!
+    // For testing purposes, if the user finishes all topics in the dummy plan, 
+    // we reset them to "pending" so they can continue testing the session flow.
+    await supabase.from("plan_topics").update({ status: "pending" }).eq("plan_id", activePlanId);
+
+    const { data: retryTopic } = await supabase
+      .from("plan_topics")
+      .select("id")
+      .eq("plan_id", activePlanId)
+      .eq("status", "pending")
+      .order("sort_order", { ascending: true })
+      .limit(1)
+      .maybeSingle();
+      
+    topic = retryTopic;
+
+    if (!topic) {
+      // Queue is truly exhausted / no pending topics left.
+      return {
+        status: "empty_queue",
+        error: "You've finished your current plan! Generate a new one to continue studying."
+      };
+    }
   }
 
   // 6. Create Check-in and Session
