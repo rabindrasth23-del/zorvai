@@ -16,6 +16,7 @@ import { createAdminClient } from '@/lib/supabase/admin';
 const RecallRequestSchema = z.object({
   session_id: z.string().uuid(),
   transcript: z.string().min(1, 'Transcript cannot be empty'),
+  method: z.enum(['voice', 'typed']).optional(),
 });
 
 export async function POST(request: NextRequest) {

@@ -9,7 +9,7 @@
 // Provider identifiers
 // ---------------------------------------------------------------------------
 
-export type ProviderId = 'claude' | 'deepseek' | 'qwen' | 'glm' | 'kimi';
+export type ProviderId = 'claude' | 'deepseek' | 'qwen' | 'glm' | 'kimi' | 'openrouter';
 
 export type CallType =
   | 'plan'
@@ -38,6 +38,14 @@ export interface ProviderConfig {
 }
 
 export const PROVIDERS: Record<ProviderId, ProviderConfig> = {
+  openrouter: {
+    id: 'openrouter',
+    name: 'OpenRouter',
+    model: process.env.OPENROUTER_MODEL || 'nvidia/nemotron-4-340b-instruct',
+    baseUrl: 'https://openrouter.ai/api/v1',
+    apiKeyEnv: 'OPENROUTER_API_KEY',
+    timeoutMs: 30_000,
+  },
   claude: {
     id: 'claude',
     name: 'Claude (Anthropic)',
@@ -84,10 +92,10 @@ export const PROVIDERS: Record<ProviderId, ProviderConfig> = {
 // ---------------------------------------------------------------------------
 
 /**
- * Default chain: Claude → DeepSeek → Qwen → GLM → Kimi
+ * Default chain: OpenRouter -> Claude → DeepSeek → Qwen → GLM → Kimi
  * Used for all coaching/plan call types.
  */
-const DEFAULT_CHAIN: ProviderId[] = ['claude', 'deepseek', 'qwen', 'glm', 'kimi'];
+const DEFAULT_CHAIN: ProviderId[] = ['openrouter', 'claude', 'deepseek', 'qwen', 'glm', 'kimi'];
 
 /**
  * Check-in chain: Claude only + a named fallback placeholder.

@@ -1,22 +1,11 @@
 import { StatCard } from "@/components/ui/stat-card";
-import { DataTable } from "@/components/ui/data-table";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { CalendarCheck2, Activity, LayoutDashboard, BookOpen, History } from "lucide-react";
 import { InviteCodeCard, LinkNotificationBanner } from "@/components/dashboard/parent-link-widgets";
-import { CircularProgress } from "@/components/ui/circular-progress";
 import { LinearProgress } from "@/components/ui/linear-progress";
-
-// DataTable columns matched against real `sessions`, `plan_topics`, and `session_results` schema
-const columns = [
-  { accessorKey: "date", header: "Date" },
-  { accessorKey: "topic", header: "Topic" },
-  { accessorKey: "duration", header: "Duration (min)" },
-  { accessorKey: "outcome", header: "Outcome" }, // derived from session_results.passed
-  { accessorKey: "status", header: "Status" }, // active, completed, abandoned
-];
 
 export default async function DashboardPage({
   searchParams,
@@ -24,7 +13,6 @@ export default async function DashboardPage({
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>
 }) {
   const resolvedSearchParams = await searchParams;
-  const activeTab = (resolvedSearchParams.tab as string) || "overview";
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
@@ -117,48 +105,15 @@ export default async function DashboardPage({
         </Button>
       </header>
 
-      {/* TABS NAVIGATION */}
-      <div className="flex items-center gap-2 border-b border-[var(--color-border)] pb-px">
-        <Link 
-          href="?tab=overview" 
-          className={`px-4 py-2.5 font-sans font-medium text-[var(--text-body-sm)] border-b-2 transition-colors ${activeTab === 'overview' ? 'border-[var(--color-primary)] text-[var(--color-primary)]' : 'border-transparent text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:border-[var(--color-border)]'}`}
-        >
-          <div className="flex items-center gap-2">
-            <LayoutDashboard className="w-4 h-4" />
-            Overview
-          </div>
-        </Link>
-        <Link 
-          href="?tab=subjects" 
-          className={`px-4 py-2.5 font-sans font-medium text-[var(--text-body-sm)] border-b-2 transition-colors ${activeTab === 'subjects' ? 'border-[var(--color-primary)] text-[var(--color-primary)]' : 'border-transparent text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:border-[var(--color-border)]'}`}
-        >
-          <div className="flex items-center gap-2">
-            <BookOpen className="w-4 h-4" />
-            Subjects & Mastery
-          </div>
-        </Link>
-        <Link 
-          href="?tab=history" 
-          className={`px-4 py-2.5 font-sans font-medium text-[var(--text-body-sm)] border-b-2 transition-colors ${activeTab === 'history' ? 'border-[var(--color-primary)] text-[var(--color-primary)]' : 'border-transparent text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:border-[var(--color-border)]'}`}
-        >
-          <div className="flex items-center gap-2">
-            <History className="w-4 h-4" />
-            Session History
-          </div>
-        </Link>
-      </div>
 
-      {/* TAB CONTENT: OVERVIEW */}
-      {activeTab === "overview" && (
+
+
         <div className="flex flex-col gap-12">
           {/* STAT CARDS / EMPTY STATE */}
           <section>
             {hasSessions ? (
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-                <StatCard title="Current Streak" value="3" trend="Days" iconType="streak" />
                 <StatCard title="Sessions" value={`${sessionCount || 0}`} iconType="sessions" />
-                <StatCard title="Mastery" value="85%" trendValue={5} iconType="mastery" />
-                <StatCard title="Guarantee" value="On Track" iconType="guarantee" />
               </div>
             ) : (
               <div className="w-full rounded-2xl border border-[var(--color-border)] bg-surface p-8 sm:p-12 flex flex-col items-center justify-center text-center shadow-[var(--shadow-sm)]">
@@ -182,12 +137,12 @@ export default async function DashboardPage({
               </h2>
               <div className="p-6 bg-surface border border-border rounded-2xl shadow-[var(--shadow-sm)]">
                 <LinearProgress 
-                  value={45} 
+                  value={0} 
                   label={`Daily Goal: ${targetHours} ${targetHours === 1 ? 'hour' : 'hours'}`} 
                   colorClass="bg-[var(--color-accent)]"
                 />
                 <p className="text-[var(--text-body-sm)] text-[var(--color-text-muted)] font-sans mt-4">
-                  You've studied for 27 minutes today. Keep it up!
+                  0 minutes studied today. Start a session to build your streak!
                 </p>
               </div>
             </section>
@@ -201,46 +156,6 @@ export default async function DashboardPage({
             </section>
           </div>
         </div>
-      )}
-
-      {/* TAB CONTENT: SUBJECTS */}
-      {activeTab === "subjects" && (
-        <section className="flex flex-col gap-6">
-          <h2 className="text-xl font-display font-medium text-[var(--color-text)]">
-            Subject Mastery
-          </h2>
-          {subjects.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {subjects.map((subject: string, idx: number) => (
-                <div key={subject} className="p-6 bg-surface border border-border rounded-2xl shadow-[var(--shadow-sm)] flex flex-col items-center gap-6">
-                  <h3 className="font-display font-medium text-[var(--color-text)] text-lg w-full text-center">{subject}</h3>
-                  <CircularProgress 
-                    value={75 + (idx * 5)} 
-                    label="Mastery Level"
-                    colorClass={idx % 2 === 0 ? "text-[var(--color-success)]" : "text-[var(--color-primary)]"}
-                  />
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="text-[var(--text-body-sm)] text-[var(--color-text-muted)] font-sans">
-              No subjects selected. Update your plan to track mastery.
-            </p>
-          )}
-        </section>
-      )}
-
-      {/* TAB CONTENT: HISTORY */}
-      {activeTab === "history" && (
-        <section className="flex flex-col gap-6">
-          <h2 className="text-xl font-display font-medium text-[var(--color-text)]">
-            Session History
-          </h2>
-          <div className="bg-surface border border-border rounded-2xl shadow-[var(--shadow-sm)] overflow-hidden">
-            <DataTable columns={columns} data={sessionsList} />
-          </div>
-        </section>
-      )}
     </div>
   );
 }
