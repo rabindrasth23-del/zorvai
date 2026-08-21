@@ -4,13 +4,13 @@ import OpenAI from 'openai';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 
-// Initialize the OpenAI client solely for transcription
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
-
 export async function POST(request: NextRequest) {
   try {
+    // Initialize the OpenAI client dynamically to avoid build-time errors
+    const openai = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
+    });
+
     // 1. Authenticate user
     const supabase = await createClient();
     const {
