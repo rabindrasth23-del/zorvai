@@ -22,8 +22,8 @@ export function FeedbackPhaseClient({ topic, feedback }: FeedbackPhaseClientProp
   const router = useRouter();
 
   return (
-    <div className="flex flex-col h-full w-full max-w-4xl mx-auto px-4 py-8 relative">
-      <div className="flex-1 overflow-y-auto relative border border-[var(--color-border)] rounded-[var(--radius-xl)] bg-[var(--color-surface)] shadow-sm flex flex-col p-8">
+    <div className="flex flex-col h-[calc(100vh-2rem)] w-full max-w-5xl mx-auto px-4 py-6 md:py-8 relative">
+      <div className="flex-1 overflow-y-auto relative border border-[var(--color-border)] rounded-[var(--radius-xl)] bg-[var(--color-surface)] shadow-md flex flex-col p-6 md:p-10">
         
         {/* Header Section */}
         <div className="flex flex-col items-center justify-center text-center mb-10">

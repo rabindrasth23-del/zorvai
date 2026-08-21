@@ -95,12 +95,23 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Topic not found' }, { status: 404 });
     }
 
-    // 6. Get the recall transcript
+    // 6. Get the recall transcript and existing challenge questions
     const { data: sessionResult } = await admin
       .from('session_results')
-      .select('recall_transcript')
+      .select('recall_transcript, challenge_qas')
       .eq('session_id', session_id)
       .single();
+
+    // IDEMPOTENCY CHECK: If questions already exist, return them immediately
+    if (sessionResult?.challenge_qas && Array.isArray(sessionResult.challenge_qas) && sessionResult.challenge_qas.length === 4) {
+      return NextResponse.json({
+        session_id,
+        phase: 'challenge',
+        questions: sessionResult.challenge_qas,
+        ai_provider: 'cached', // Explicitly note that this was cached
+        ai_latency_ms: 0,
+      });
+    }
 
     const recallTranscript = sessionResult?.recall_transcript ?? '(No recall transcript available)';
 

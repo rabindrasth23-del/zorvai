@@ -104,6 +104,23 @@ export const CheckinResponseSchema = z.object({
 export type CheckinResponse = z.infer<typeof CheckinResponseSchema>;
 
 // ---------------------------------------------------------------------------
+// Onboarding & Safety
+// ---------------------------------------------------------------------------
+
+export const OnboardingTransitionResponseSchema = z.object({
+  transition_text: z.string().min(1),
+});
+
+export type OnboardingTransitionResponse = z.infer<typeof OnboardingTransitionResponseSchema>;
+
+export const SafetyClassifierResponseSchema = z.object({
+  safe: z.boolean(),
+  flag_reason: z.string(),
+});
+
+export type SafetyClassifierResponse = z.infer<typeof SafetyClassifierResponseSchema>;
+
+// ---------------------------------------------------------------------------
 // Schema registry — maps call type to its Zod schema
 // ---------------------------------------------------------------------------
 
@@ -116,4 +133,6 @@ export const RESPONSE_SCHEMAS: Record<CallType, z.ZodType<any>> = {
   feedback: FeedbackResponseSchema,
   chatbot: ChatbotResponseSchema,
   checkin: CheckinResponseSchema,
+  onboarding_transition: OnboardingTransitionResponseSchema,
+  safety_classifier: SafetyClassifierResponseSchema,
 };

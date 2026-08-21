@@ -74,15 +74,11 @@ function recordSuccess(providerId: ProviderId): void {
 function callProvider(
   providerId: ProviderId,
   systemPrompt: string,
-  userMessage: string
+  userMessage: string,
+  signal: AbortSignal
 ) {
   const provider = PROVIDERS[providerId];
-
-  if (providerId === 'claude') {
-    return callAnthropic({ systemPrompt, userMessage, provider });
-  }
-
-  return callOpenAICompatible({ systemPrompt, userMessage, provider });
+  return callOpenAICompatible({ systemPrompt, userMessage, provider, signal });
 }
 
 // ---------------------------------------------------------------------------
@@ -187,17 +183,15 @@ export async function runAICall<T = unknown>(
     }
 
     try {
-      // Make the AI call with timeout
-      const response = await Promise.race([
-        callProvider(providerId, systemPrompt, userMessage),
-        new Promise<never>((_, reject) =>
-          setTimeout(
-            () => reject(new Error(`Timeout after ${provider.timeoutMs}ms`)),
-            provider.timeoutMs
-          )
-        ),
-      ]);
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => {
+        controller.abort();
+      }, provider.timeoutMs);
 
+      // Make the AI call with timeout signal
+      const response = await callProvider(providerId, systemPrompt, userMessage, controller.signal);
+      clearTimeout(timeoutId);
+      
       // Parse JSON from response
       const jsonStr = extractJSON(response.content);
       let parsed: unknown;

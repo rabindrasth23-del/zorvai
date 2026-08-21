@@ -9,7 +9,7 @@
 // Provider identifiers
 // ---------------------------------------------------------------------------
 
-export type ProviderId = 'claude' | 'deepseek' | 'qwen' | 'glm' | 'kimi' | 'openrouter';
+export type ProviderId = 'claude_opus_5_fast' | 'gemini_3_7_flash' | 'gpt_5_6_luna_pro' | 'checkin_fallback';
 
 export type CallType =
   | 'plan'
@@ -18,7 +18,9 @@ export type CallType =
   | 'challenge'
   | 'feedback'
   | 'chatbot'
-  | 'checkin';
+  | 'checkin'
+  | 'onboarding_transition'
+  | 'safety_classifier';
 
 // ---------------------------------------------------------------------------
 // Provider configuration
@@ -38,52 +40,37 @@ export interface ProviderConfig {
 }
 
 export const PROVIDERS: Record<ProviderId, ProviderConfig> = {
-  openrouter: {
-    id: 'openrouter',
-    name: 'OpenRouter',
-    model: process.env.OPENROUTER_MODEL || 'nvidia/nemotron-4-340b-instruct',
+  claude_opus_5_fast: {
+    id: 'claude_opus_5_fast',
+    name: 'Claude Opus 5 Fast (OpenRouter)',
+    model: 'anthropic/claude-opus-5-fast',
     baseUrl: 'https://openrouter.ai/api/v1',
     apiKeyEnv: 'OPENROUTER_API_KEY',
-    timeoutMs: 30_000,
+    timeoutMs: 15_000, // Strict 15s timeout
   },
-  claude: {
-    id: 'claude',
-    name: 'Claude (Anthropic)',
-    model: 'claude-sonnet-4-20250514',
-    apiKeyEnv: 'ANTHROPIC_API_KEY',
-    timeoutMs: 30_000,
+  gemini_3_7_flash: {
+    id: 'gemini_3_7_flash',
+    name: 'Gemini 3.7 Flash (OpenRouter)',
+    model: 'google/gemini-3.7-flash',
+    baseUrl: 'https://openrouter.ai/api/v1',
+    apiKeyEnv: 'OPENROUTER_API_KEY',
+    timeoutMs: 15_000,
   },
-  deepseek: {
-    id: 'deepseek',
-    name: 'DeepSeek',
-    model: 'deepseek-chat',
-    baseUrl: process.env.DEEPSEEK_BASE_URL || 'https://api.deepseek.com/v1',
-    apiKeyEnv: 'DEEPSEEK_API_KEY',
-    timeoutMs: 20_000,
+  gpt_5_6_luna_pro: {
+    id: 'gpt_5_6_luna_pro',
+    name: 'GPT-5.6 Luna Pro (OpenRouter)',
+    model: 'openai/gpt-5.6-luna-pro',
+    baseUrl: 'https://openrouter.ai/api/v1',
+    apiKeyEnv: 'OPENROUTER_API_KEY',
+    timeoutMs: 15_000,
   },
-  qwen: {
-    id: 'qwen',
-    name: 'Qwen (Alibaba)',
-    model: 'qwen-plus',
-    baseUrl: process.env.QWEN_BASE_URL || 'https://dashscope.aliyuncs.com/compatible-mode/v1',
-    apiKeyEnv: 'QWEN_API_KEY',
-    timeoutMs: 20_000,
-  },
-  glm: {
-    id: 'glm',
-    name: 'GLM (Zhipu)',
-    model: 'glm-4-flash',
-    baseUrl: process.env.GLM_BASE_URL || 'https://open.bigmodel.cn/api/paas/v4',
-    apiKeyEnv: 'GLM_API_KEY',
-    timeoutMs: 20_000,
-  },
-  kimi: {
-    id: 'kimi',
-    name: 'Kimi (Moonshot)',
-    model: 'moonshot-v1-8k',
-    baseUrl: process.env.KIMI_BASE_URL || 'https://api.moonshot.cn/v1',
-    apiKeyEnv: 'KIMI_API_KEY',
-    timeoutMs: 20_000,
+  checkin_fallback: {
+    id: 'checkin_fallback',
+    name: 'Check-in Fallback',
+    model: process.env.CHECKIN_FALLBACK_MODEL || 'anthropic/claude-3-haiku:beta',
+    baseUrl: 'https://openrouter.ai/api/v1',
+    apiKeyEnv: 'OPENROUTER_API_KEY',
+    timeoutMs: 10_000,
   },
 };
 
@@ -92,36 +79,42 @@ export const PROVIDERS: Record<ProviderId, ProviderConfig> = {
 // ---------------------------------------------------------------------------
 
 /**
- * Default chain: OpenRouter -> Claude → DeepSeek → Qwen → GLM → Kimi
- * Used for all coaching/plan call types.
+ * Standard High-Reliability Chain (for quality-critical phases like Challenge/Feedback)
+ * 1. Claude Opus 5 Fast
+ * 2. Gemini 3.7 Flash
+ * 3. GPT-5.6 Luna Pro
  */
-const DEFAULT_CHAIN: ProviderId[] = ['openrouter', 'claude', 'deepseek', 'qwen', 'glm', 'kimi'];
+const DEFAULT_CHAIN: ProviderId[] = ['claude_opus_5_fast', 'gemini_3_7_flash', 'gpt_5_6_luna_pro'];
 
 /**
- * Check-in chain: Claude only + a named fallback placeholder.
- *
- * CHECKIN_FALLBACK_PROVIDER is a compliance decision, NOT a forgotten key.
- * If Claude fails and the fallback is unset, the engine throws rather than
- * silently falling through to any provider. This is intentional — see TRD
- * Section 4 and Checkin Escalation doc.
+ * Teach Phase Chain
+ * Uses GPT-5.6 Luna Pro as primary to balance cost during the highest-volume phase,
+ * reserving Opus 5 Fast for evaluation phases.
+ */
+const TEACH_CHAIN: ProviderId[] = ['gpt_5_6_luna_pro', 'claude_opus_5_fast', 'gemini_3_7_flash'];
+
+/**
+ * Check-in chain:
+ * Uses Claude Opus 5 Fast first. If it fails, falls back to the configured fallback model.
  */
 function getCheckinChain(): ProviderId[] {
-  const fallback = process.env.CHECKIN_FALLBACK_PROVIDER as ProviderId | undefined;
-  if (fallback && PROVIDERS[fallback]) {
-    return ['claude', fallback];
+  const fallbackEnabled = process.env.CHECKIN_FALLBACK_ENABLED === 'true';
+  if (fallbackEnabled) {
+    return ['claude_opus_5_fast', 'checkin_fallback'];
   }
-  // Only Claude — if Claude fails, engine will throw with a clear message
-  return ['claude'];
+  return ['claude_opus_5_fast'];
 }
 
 export const PROVIDER_CHAINS: Record<CallType, ProviderId[]> = {
   plan: DEFAULT_CHAIN,
-  teach: DEFAULT_CHAIN,
+  teach: TEACH_CHAIN,
   recall: DEFAULT_CHAIN,
   challenge: DEFAULT_CHAIN,
   feedback: DEFAULT_CHAIN,
   chatbot: DEFAULT_CHAIN,
   checkin: getCheckinChain(),
+  onboarding_transition: ['gemini_3_7_flash', 'claude_opus_5_fast'],
+  safety_classifier: ['gemini_3_7_flash', 'claude_opus_5_fast'],
 };
 
 // ---------------------------------------------------------------------------

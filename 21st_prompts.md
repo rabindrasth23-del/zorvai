@@ -9475,7 +9475,7 @@ export function SendIcon({ size = 40, color = "currentColor", className, duratio
 }
 
 /* ─── 10. TOGGLE ─── switch flips with spring */
-export function ToggleIcon({ size = 40, color = "currentColor", className, duration = 1800 }: StateIconProps) {
+export function ToggleIcon({ size = 40, color = "currentColor", className, duration =1800 }: StateIconProps) {
   const on = useAutoToggle(duration);
   return (
     <svg viewBox="0 0 40 40" fill="none" className={cn("", className)} style={{ width: size, height: size }}>

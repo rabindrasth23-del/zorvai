@@ -102,13 +102,14 @@ export function ChallengePhaseClient({ sessionId, topic }: ChallengePhaseClientP
   };
 
   return (
-    <div className="flex flex-col h-full w-full max-w-4xl mx-auto px-4 py-8 relative">
-      <div className="flex-1 overflow-hidden relative border border-[var(--color-border)] rounded-[var(--radius-xl)] bg-[var(--color-surface)] shadow-sm flex flex-col p-8">
+    <div className="flex flex-col h-[calc(100vh-2rem)] w-full max-w-5xl mx-auto px-4 py-6 md:py-8 relative">
+      <div className="flex-1 overflow-hidden relative border border-[var(--color-border)] rounded-[var(--radius-xl)] bg-[var(--color-surface)] shadow-md flex flex-col p-4 md:p-8 transition-all">
         
         {isGenerating && !generateError && (
           <div className="flex flex-col h-full items-center justify-center text-[var(--color-text-muted)] font-sans gap-4">
-            <Loader2 className="w-8 h-8 animate-spin text-[var(--color-primary)]" />
-            <p>Generating personalized challenge questions...</p>
+            <Loader2 className="w-10 h-10 animate-spin text-[var(--color-primary)]" />
+            <p className="font-medium text-[var(--color-text)]">Generating personalized challenge questions...</p>
+            <p className="text-sm">Based on your recall transcript.</p>
           </div>
         )}
 

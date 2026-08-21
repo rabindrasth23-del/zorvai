@@ -21,7 +21,7 @@ export default async function FeedbackPhasePage({
   // 1. Fetch Session
   const { data: session, error: sessionError } = await admin
     .from("sessions")
-    .select("id, student_id, phase, status, topic")
+    .select("id, student_id, phase, status, topic_id, plan_topics(title)")
     .eq("id", sessionId)
     .single();
 
@@ -60,10 +60,14 @@ export default async function FeedbackPhasePage({
     passed: typeof result?.passed === "boolean" ? result.passed : false,
   };
 
+  const topicTitle = Array.isArray(session.plan_topics) 
+    ? (session.plan_topics[0] as any)?.title 
+    : (session.plan_topics as any)?.title || "Unknown Topic";
+
   return (
     <div className="flex flex-col h-screen w-full bg-[var(--color-bg)]">
       <FeedbackPhaseClient 
-        topic={session.topic} 
+        topic={topicTitle} 
         feedback={feedbackData} 
       />
     </div>

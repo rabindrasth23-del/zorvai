@@ -23,9 +23,10 @@ function getClient(): Anthropic {
 }
 
 export interface AdapterRequest {
+  provider: ProviderConfig;
   systemPrompt: string;
   userMessage: string;
-  provider: ProviderConfig;
+  signal?: AbortSignal;
 }
 
 export interface AdapterResponse {

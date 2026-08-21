@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { CalendarCheck2, Activity, LayoutDashboard, BookOpen, History } from "lucide-react";
 import { InviteCodeCard, LinkNotificationBanner } from "@/components/dashboard/parent-link-widgets";
-import { LinearProgress } from "@/components/ui/linear-progress";
+import { CircularProgress } from "@/components/ui/circular-progress";
 
 export default async function DashboardPage({
   searchParams,
@@ -86,76 +86,89 @@ export default async function DashboardPage({
         />
       ))}
 
-      <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 pt-4">
-        <div>
-          <h1 className="text-3xl md:text-4xl font-display text-[var(--color-text)] tracking-tight">
-            Welcome back, {studentName}
-          </h1>
-          <p className="text-[var(--text-body)] text-[var(--color-text-muted)] mt-2 font-sans">
-            Your daily target is {targetHours} {targetHours === 1 ? 'hour' : 'hours'}.
-          </p>
+      <header className="w-full relative overflow-hidden rounded-[var(--radius-xl)] bg-[var(--color-primary)] text-white p-8 sm:p-10 shadow-md">
+        <div className="absolute top-0 right-0 opacity-10 pointer-events-none transform translate-x-1/4 -translate-y-1/4">
+          <BookOpen className="w-64 h-64" />
         </div>
-        
-        {/* PRIMARY CTA: Visual focal point */}
-        <Button asChild className="rounded-xl h-12 px-8 font-sans font-medium shadow-sm shrink-0 bg-[var(--color-primary)] text-white hover:opacity-90 transition-opacity w-full sm:w-auto">
-          <Link href="/checkin">
-            <CalendarCheck2 className="mr-2 w-5 h-5" />
-            Start Daily Check-in
-          </Link>
-        </Button>
+        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+          <div>
+            <h1 className="text-3xl md:text-4xl font-display tracking-tight text-white mb-2">
+              Welcome back, {studentName}
+            </h1>
+            <p className="text-white/80 font-sans text-lg">
+              Ready to hit your {targetHours}-hour target today?
+            </p>
+          </div>
+          <Button asChild className="rounded-full h-12 px-8 font-sans font-medium bg-white text-[var(--color-primary)] hover:bg-white/90 shadow-sm transition-all hover:scale-105 shrink-0">
+            <Link href="/checkin">
+              <CalendarCheck2 className="mr-2 w-5 h-5" />
+              Start Daily Check-in
+            </Link>
+          </Button>
+        </div>
       </header>
 
+      {/* BENTO GRID */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        
+        {/* Metric 1: Progress */}
+        <section className="bg-surface border border-border rounded-[var(--radius-xl)] shadow-[var(--shadow-sm)] p-6 md:p-8 flex flex-col items-center justify-center text-center">
+          <h2 className="text-lg font-display font-medium text-[var(--color-text)] mb-6 self-start">Today's Progress</h2>
+          <CircularProgress 
+            value={0} 
+            size={160} 
+            strokeWidth={12} 
+            label="0 / 120 mins" 
+            colorClass="text-[var(--color-accent)]"
+          />
+          <p className="text-[var(--text-body-sm)] text-[var(--color-text-muted)] font-sans mt-6">
+            Start a session to fill your ring.
+          </p>
+        </section>
 
-
-
-        <div className="flex flex-col gap-12">
-          {/* STAT CARDS / EMPTY STATE */}
-          <section>
-            {hasSessions ? (
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-                <StatCard title="Sessions" value={`${sessionCount || 0}`} iconType="sessions" />
-              </div>
-            ) : (
-              <div className="w-full rounded-2xl border border-[var(--color-border)] bg-surface p-8 sm:p-12 flex flex-col items-center justify-center text-center shadow-[var(--shadow-sm)]">
-                <div className="w-16 h-16 rounded-full bg-[var(--color-primary)]/10 flex items-center justify-center mb-5">
-                  <Activity className="w-8 h-8 text-[var(--color-primary)]" />
+        {/* Metric 2: Streak & Sessions */}
+        <section className="md:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-6">
+          {hasSessions ? (
+            <>
+              <div className="bg-surface border border-border rounded-[var(--radius-xl)] shadow-[var(--shadow-sm)] p-6 flex flex-col justify-center">
+                <div className="w-12 h-12 rounded-full bg-[var(--color-success)]/10 flex items-center justify-center text-[var(--color-success)] mb-4">
+                  <Activity className="w-6 h-6" />
                 </div>
-                <h3 className="font-display font-medium text-[var(--color-text)] text-xl mb-2">
-                  No sessions found.
-                </h3>
-                <p className="text-[var(--color-text-muted)] text-[var(--text-body)] max-w-sm font-sans leading-relaxed">
-                  Complete an onboarding check-in to start building your streak and mastery score.
-                </p>
+                <h3 className="text-[var(--color-text-muted)] font-sans text-sm font-medium uppercase tracking-wider mb-1">Current Streak</h3>
+                <p className="text-4xl font-display font-semibold text-[var(--color-text)]">0 <span className="text-xl text-[var(--color-text-muted)] font-normal">days</span></p>
               </div>
-            )}
-          </section>
-
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
-            <section className="lg:col-span-2 flex flex-col gap-6">
-              <h2 className="text-xl font-display font-medium text-[var(--color-text)]">
-                Today's Progress
-              </h2>
-              <div className="p-6 bg-surface border border-border rounded-2xl shadow-[var(--shadow-sm)]">
-                <LinearProgress 
-                  value={0} 
-                  label={`Daily Goal: ${targetHours} ${targetHours === 1 ? 'hour' : 'hours'}`} 
-                  colorClass="bg-[var(--color-accent)]"
-                />
-                <p className="text-[var(--text-body-sm)] text-[var(--color-text-muted)] font-sans mt-4">
-                  0 minutes studied today. Start a session to build your streak!
-                </p>
+              <div className="bg-surface border border-border rounded-[var(--radius-xl)] shadow-[var(--shadow-sm)] p-6 flex flex-col justify-center">
+                <div className="w-12 h-12 rounded-full bg-[var(--color-primary)]/10 flex items-center justify-center text-[var(--color-primary)] mb-4">
+                  <History className="w-6 h-6" />
+                </div>
+                <h3 className="text-[var(--color-text-muted)] font-sans text-sm font-medium uppercase tracking-wider mb-1">Total Sessions</h3>
+                <p className="text-4xl font-display font-semibold text-[var(--color-text)]">{sessionCount || 0}</p>
               </div>
-            </section>
+            </>
+          ) : (
+            <div className="sm:col-span-2 rounded-[var(--radius-xl)] border border-[var(--color-border)] bg-surface p-8 flex flex-col items-center justify-center text-center shadow-[var(--shadow-sm)] h-full">
+              <div className="w-16 h-16 rounded-full bg-[var(--color-primary)]/10 flex items-center justify-center mb-5">
+                <Activity className="w-8 h-8 text-[var(--color-primary)]" />
+              </div>
+              <h3 className="font-display font-medium text-[var(--color-text)] text-xl mb-2">
+                No sessions yet.
+              </h3>
+              <p className="text-[var(--color-text-muted)] text-[var(--text-body)] max-w-sm font-sans leading-relaxed">
+                Complete an onboarding check-in to start building your streak and mastery score.
+              </p>
+            </div>
+          )}
+        </section>
 
-            {/* INVITE CODE for parent linking */}
-            <section>
-              <h2 className="text-xl font-display font-medium text-[var(--color-text)] mb-4">
-                Parent Linking
-              </h2>
-              <InviteCodeCard code={inviteCode} />
-            </section>
+        {/* Parent Linking */}
+        <section className="bg-surface border border-border rounded-[var(--radius-xl)] shadow-[var(--shadow-sm)] p-6 md:p-8 md:col-span-3">
+          <h2 className="text-lg font-display font-medium text-[var(--color-text)] mb-6">Parent Connection</h2>
+          <div className="max-w-md">
+            <InviteCodeCard code={inviteCode} />
           </div>
-        </div>
+        </section>
+
+      </div>
     </div>
   );
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { AudioRecorder } from "@/components/ui/audio-recorder";
+import { VoiceInteraction } from "@/components/ui/voice-interaction";
 import { useRouter } from "next/navigation";
 import { AlertCircle, RefreshCcw } from "lucide-react";
 import { motion } from "motion/react";
@@ -57,7 +57,7 @@ export function RecallPhaseClient({ sessionId, topic }: RecallPhaseClientProps) 
         </div>
 
         <div className="flex-1 overflow-y-auto">
-          <AudioRecorder 
+          <VoiceInteraction 
             onSubmit={handleSubmit} 
             isSubmitting={isSubmitting} 
           />

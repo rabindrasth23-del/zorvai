@@ -2,14 +2,15 @@ import { Check, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const features = [
-  { name: "Daily Study Check-ins", basic: true, pro: true, guarantee: true },
-  { name: "Subject Mastery Tracking", basic: "1 Subject", pro: "Unlimited", guarantee: "Unlimited" },
-  { name: "Streak Tracking", basic: true, pro: true, guarantee: true },
-  { name: "Parent Dashboard", basic: false, pro: true, guarantee: true },
-  { name: "Advanced Analytics & Trends", basic: false, pro: true, guarantee: true },
-  { name: "Zorvai Guarantee Eligibility", basic: false, pro: false, guarantee: true },
-  { name: "Weekly Custom Reports", basic: false, pro: false, guarantee: true },
-  { name: "1-on-1 Strategy Session", basic: false, pro: false, guarantee: true },
+  { name: "Full AI session access", starter: "7 days", solo: "Unlimited", family: "Unlimited" },
+  { name: "Subjects included", starter: "1 Subject", solo: "All Subjects", family: "All Subjects" },
+  { name: "Spaced repetition & tracking", starter: true, solo: true, family: true },
+  { name: "Zorvai Guarantee Eligibility", starter: false, solo: true, family: true },
+  { name: "Parent Dashboard", starter: false, solo: false, family: true },
+  { name: "Missed-session alerts", starter: false, solo: false, family: true },
+  { name: "Weekly email digest", starter: false, solo: false, family: true },
+  { name: "Sibling add-on (50% extra)", starter: false, solo: false, family: "Annual only" },
+  { name: "Quarterly progress reports", starter: false, solo: false, family: "Annual only" },
 ];
 
 export function PricingTable() {
@@ -23,47 +24,32 @@ export function PricingTable() {
       </div>
 
       <div className="overflow-x-auto">
-        <table className="w-full text-left border-collapse min-w-[600px]">
+        <table className="w-full text-left border-collapse min-w-[700px]">
           <thead>
             <tr>
-              <th className="w-1/3 p-4 border-b border-border bg-surface font-sans text-[var(--text-body-sm)] text-[var(--color-text-muted)] font-medium">Features</th>
-              <th className="w-1/5 p-4 border-b border-border bg-surface font-display text-lg text-[var(--color-text)] font-semibold text-center">Basic</th>
-              <th className="w-1/5 p-4 border-b border-border bg-surface/50 font-display text-lg text-[var(--color-text)] font-semibold text-center relative">
-                <div className="absolute inset-0 border-t-2 border-x-2 border-[var(--color-accent)] rounded-t-xl z-0 bg-[var(--color-accent)]/5 pointer-events-none"></div>
-                <span className="relative z-10">Pro</span>
-              </th>
-              <th className="w-1/5 p-4 border-b border-border bg-surface font-display text-lg text-[var(--color-text)] font-semibold text-center">Guarantee</th>
+              <th className="w-[40%] p-4 border-b border-border bg-surface font-sans text-[var(--text-body-sm)] text-[var(--color-text-muted)] font-medium">Features</th>
+              <th className="w-1/5 p-4 border-b border-border bg-surface font-display text-lg text-[var(--color-text)] font-semibold text-center">Family Starter</th>
+              <th className="w-1/5 p-4 border-b border-border bg-surface font-display text-lg text-[var(--color-text)] font-semibold text-center">Student Solo</th>
+              <th className="w-1/5 p-4 border-b border-border bg-surface font-display text-lg text-[var(--color-text)] font-semibold text-center">Family Plan</th>
             </tr>
           </thead>
-          <tbody className="bg-surface">
-            {features.map((feature, idx) => (
-              <tr key={idx} className="group hover:bg-muted/30 transition-colors">
+          <tbody>
+            {features.map((feature, i) => (
+              <tr key={i} className="hover:bg-surface/50 transition-colors">
                 <td className="p-4 border-b border-border font-sans text-[var(--text-body)] text-[var(--color-text)]">
                   {feature.name}
                 </td>
                 <td className="p-4 border-b border-border text-center">
-                  <FeatureValue value={feature.basic} />
+                  <FeatureValue value={feature.starter} />
                 </td>
-                <td className="p-4 border-b border-border text-center relative">
-                  <div className="absolute inset-0 border-x-2 border-[var(--color-accent)] z-0 bg-[var(--color-accent)]/5 pointer-events-none"></div>
-                  <div className="relative z-10 flex justify-center">
-                    <FeatureValue value={feature.pro} />
-                  </div>
+                <td className="p-4 border-b border-border text-center bg-[var(--color-primary)]/5">
+                  <FeatureValue value={feature.solo} />
                 </td>
                 <td className="p-4 border-b border-border text-center">
-                  <FeatureValue value={feature.guarantee} />
+                  <FeatureValue value={feature.family} />
                 </td>
               </tr>
             ))}
-            {/* Bottom border for the highlighted column */}
-            <tr>
-              <td></td>
-              <td></td>
-              <td className="relative h-4">
-                <div className="absolute inset-0 border-b-2 border-x-2 border-[var(--color-accent)] rounded-b-xl z-0 bg-[var(--color-accent)]/5 pointer-events-none"></div>
-              </td>
-              <td></td>
-            </tr>
           </tbody>
         </table>
       </div>

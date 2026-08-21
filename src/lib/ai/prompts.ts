@@ -296,6 +296,21 @@ export function getSystemPrompt(
       return chatbotPrompt(payload.student, payload.recentHistory);
     case 'checkin':
       return checkinPrompt(payload.student);
+    case 'onboarding_transition':
+      return `You are a warm, supportive tutor doing an onboarding session.
+The student just answered: "${payload.previousAnswer}".
+Your next goal is to ask about: "${payload.nextIntent}".
+Generate exactly 1-2 conversational sentences that acknowledge their last answer warmly, and transition into the next question.
+Keep it extremely concise and natural. Return ONLY valid JSON matching this schema:
+{ "transition_text": "string" }`;
+    case 'safety_classifier':
+      return `You are a safety filter for an educational app used by minors.
+Analyze the following student input: "${payload.input}".
+Does it contain mentions of self-harm, abuse, severe mental health crisis, or immediate danger?
+Return true if it is SAFE (normal frustration/stress is safe). Return false if it is UNSAFE.
+Return a brief reason if flagged.
+Return ONLY valid JSON matching this schema:
+{ "safe": boolean, "flag_reason": "string" }`;
     default:
       throw new Error(`Unknown call type: ${callType}`);
   }
@@ -325,6 +340,10 @@ export function getUserMessage(
       return payload.message as string;
     case 'checkin':
       return `Student check-in message: "${payload.moodText}"`;
+    case 'onboarding_transition':
+      return `Previous answer: ${payload.previousAnswer}\nNext intent: ${payload.nextIntent}`;
+    case 'safety_classifier':
+      return `Input: ${payload.input}`;
     default:
       throw new Error(`Unknown call type: ${callType}`);
   }

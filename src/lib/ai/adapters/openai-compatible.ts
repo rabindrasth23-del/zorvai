@@ -57,9 +57,7 @@ export async function callOpenAICompatible(
         content: request.userMessage,
       },
     ],
-    // Request JSON output where supported
-    response_format: { type: 'json_object' },
-  });
+  }, { signal: request.signal });
 
   const latencyMs = Date.now() - start;
 

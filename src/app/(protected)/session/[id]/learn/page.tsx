@@ -19,7 +19,14 @@ export default async function LearnPhasePage({
   const admin = createAdminClient();
   const { data: session, error } = await admin
     .from("sessions")
-    .select("id, student_id, phase, status, topic")
+    .select(`
+      id, 
+      student_id, 
+      phase, 
+      status, 
+      topic_id,
+      plan_topics (title)
+    `)
     .eq("id", sessionId)
     .single();
 
@@ -45,7 +52,8 @@ export default async function LearnPhasePage({
     <div className="flex flex-col h-screen w-full bg-[var(--color-bg)]">
       <LearnPhaseClient 
         sessionId={session.id} 
-        topic={session.topic} 
+        topicId={session.topic_id} 
+        topicTitle={Array.isArray(session.plan_topics) ? (session.plan_topics[0] as any)?.title : (session.plan_topics as any)?.title || "Unknown Topic"}
       />
     </div>
   );

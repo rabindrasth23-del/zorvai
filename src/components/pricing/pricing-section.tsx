@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Check, X } from "lucide-react";
+import { Check, X, ShieldAlert } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
@@ -9,8 +9,10 @@ import Link from "next/link";
 interface PricingTier {
   name: string;
   description: string;
-  monthlyPrice: number;
-  yearlyPrice: number;
+  monthlyPrice: string;
+  yearlyPrice: string;
+  periodLabelMonthly: string;
+  periodLabelYearly: string;
   features: { name: string; included: boolean }[];
   highlighted?: boolean;
   ctaText: string;
@@ -19,50 +21,55 @@ interface PricingTier {
 
 const tiers: PricingTier[] = [
   {
-    name: "Basic",
-    description: "Essential tools for students building a daily habit.",
-    monthlyPrice: 0,
-    yearlyPrice: 0,
+    name: "Family Starter",
+    description: "One child, one subject. Try it out for a week.",
+    monthlyPrice: "12.99",
+    yearlyPrice: "12.99",
+    periodLabelMonthly: "/week",
+    periodLabelYearly: "/week",
     features: [
-      { name: "Daily Check-ins", included: true },
-      { name: "Basic Statistics", included: true },
-      { name: "1 Subject Tracking", included: true },
-      { name: "Parent Dashboard", included: false },
+      { name: "Full session access for 7 days", included: true },
+      { name: "All subjects", included: false },
+      { name: "Parent dashboard & alerts", included: false },
       { name: "Zorvai Guarantee", included: false },
     ],
-    ctaText: "Get Started",
-    ctaHref: "/signup",
+    ctaText: "Start 7-Day Trial",
+    ctaHref: "/signup?plan=family_starter",
   },
   {
-    name: "Pro",
-    description: "Advanced tracking and full parental visibility.",
-    monthlyPrice: 12,
-    yearlyPrice: 9, // $108/year
+    name: "Student Solo",
+    description: "One student, self-managed. Build a daily habit.",
+    monthlyPrice: "19.99",
+    yearlyPrice: "19.99",
+    periodLabelMonthly: "/month",
+    periodLabelYearly: "/month",
+    highlighted: false,
+    features: [
+      { name: "All subjects, full access", included: true },
+      { name: "AI chatbot & plan maker", included: true },
+      { name: "Zorvai Guarantee", included: true },
+      { name: "Parent dashboard & alerts", included: false },
+    ],
+    ctaText: "Get Student Solo",
+    ctaHref: "/signup?plan=student_solo",
+  },
+  {
+    name: "Family Plan",
+    description: "Up to 2 children. Full parental visibility and tracking.",
+    monthlyPrice: "39.99",
+    yearlyPrice: "24.92", // $299 / 12 months
+    periodLabelMonthly: "/month",
+    periodLabelYearly: "/month (billed $299/yr)",
     highlighted: true,
     features: [
-      { name: "Daily Check-ins", included: true },
-      { name: "Advanced Statistics & Trends", included: true },
-      { name: "Unlimited Subjects", included: true },
-      { name: "Parent Dashboard", included: true },
-      { name: "Zorvai Guarantee", included: false },
+      { name: "All subjects, full access", included: true },
+      { name: "Parent dashboard", included: true },
+      { name: "Missed-session alerts & digest", included: true },
+      { name: "Zorvai Guarantee", included: true },
+      { name: "Sibling add-on at 50% extra (Annual only)", included: true },
     ],
-    ctaText: "Start 14-Day Free Trial",
-    ctaHref: "/signup?plan=pro",
-  },
-  {
-    name: "Guarantee",
-    description: "Our ultimate plan. If they don't improve, you don't pay.",
-    monthlyPrice: 29,
-    yearlyPrice: 24, // $288/year
-    features: [
-      { name: "Everything in Pro", included: true },
-      { name: "Zorvai Guarantee Eligibility", included: true },
-      { name: "Weekly Custom Reports", included: true },
-      { name: "Priority Support", included: true },
-      { name: "1-on-1 Strategy Session", included: true },
-    ],
-    ctaText: "Join the Waitlist",
-    ctaHref: "/waitlist",
+    ctaText: "Join Family Plan",
+    ctaHref: "/signup?plan=family",
   }
 ];
 
@@ -72,6 +79,17 @@ export function PricingSection() {
   return (
     <div className="flex flex-col items-center w-full max-w-6xl mx-auto py-12 px-4 gap-12">
       
+      {/* Waitlist Banner */}
+      <div className="w-full max-w-3xl bg-[var(--color-primary)]/10 border border-[var(--color-primary)]/20 rounded-2xl p-6 flex items-start gap-4 shadow-sm mb-4">
+        <ShieldAlert className="w-6 h-6 text-[var(--color-primary)] flex-shrink-0 mt-1" />
+        <div>
+          <h4 className="font-display font-semibold text-[var(--color-text)] text-lg">Waitlist Pricing Active</h4>
+          <p className="font-sans text-[var(--color-text-muted)] text-[var(--text-body-sm)] mt-1 leading-relaxed">
+            Tiered scarcity applies to Monthly and Annual plans: <strong>First 100 signups get 60% off forever</strong>. Signups 101-500 get 40% off forever. The discount is permanent and locks in your founding member rate.
+          </p>
+        </div>
+      </div>
+
       {/* Toggle */}
       <div className="flex items-center gap-3">
         <span className={cn("font-sans text-[var(--text-body)]", !isYearly ? "font-medium text-[var(--color-text)]" : "text-[var(--color-text-muted)]")}>
@@ -96,7 +114,7 @@ export function PricingSection() {
             Annually
           </span>
           <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-widest bg-[var(--color-success)]/10 text-[var(--color-success)]">
-            Save 20%
+            Save ~38%
           </span>
         </div>
       </div>
@@ -105,6 +123,7 @@ export function PricingSection() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8 w-full">
         {tiers.map((tier) => {
           const price = isYearly ? tier.yearlyPrice : tier.monthlyPrice;
+          const periodLabel = isYearly ? tier.periodLabelYearly : tier.periodLabelMonthly;
           return (
             <div 
               key={tier.name}
@@ -126,13 +145,20 @@ export function PricingSection() {
                 </p>
               </div>
 
-              <div className="mb-8 flex items-baseline gap-1">
-                <span className="text-4xl font-mono font-bold text-[var(--color-text)] tracking-tight">
-                  ${price}
-                </span>
-                <span className="text-[var(--color-text-muted)] font-sans text-[var(--text-body-sm)]">
-                  /month
-                </span>
+              <div className="mb-8 flex flex-col items-start justify-center gap-1 min-h-[72px]">
+                <div className="flex items-baseline gap-1">
+                  <span className="text-4xl font-mono font-bold text-[var(--color-text)] tracking-tight">
+                    ${price}
+                  </span>
+                  <span className="text-[var(--color-text-muted)] font-sans text-[var(--text-body-sm)]">
+                    {periodLabel.split(' ')[0]}
+                  </span>
+                </div>
+                {periodLabel.includes('billed') && (
+                  <span className="text-[var(--color-text-muted)] font-sans text-[12px] opacity-80 block">
+                    {periodLabel.substring(periodLabel.indexOf('('))}
+                  </span>
+                )}
               </div>
 
               <div className="flex-1">

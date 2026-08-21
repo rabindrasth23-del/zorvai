@@ -11,7 +11,7 @@
 | Language | JavaScript (ES Modules) | ES2024 | No TypeScript overhead for MVP |
 | Database | Supabase (Postgres) | Latest | Managed, auth built in, RLS |
 | AI | Claude API (Anthropic) | claude-sonnet-4-6 | Vision + text, strong instruction following |
-| Voice input | Browser Web Speech API | Native | Free, no API key, supports major languages |
+| Voice input | Server-side Whisper API (OpenAI) | whisper-1 | Multi-device reliability, supports all browsers (Firefox/Safari), superior accuracy |
 | Voice output | Browser SpeechSynthesis API | Native | Free text-to-speech, no external service |
 | Payments (USA) | Stripe | Latest SDK | Industry standard, subscriptions built in |
 | Payments (India) | Razorpay | Latest SDK | UPI, cards, wallets — dominant in India |
