@@ -32,8 +32,7 @@ export function LearnPhaseClient({ sessionId, topic }: LearnPhaseClientProps) {
         {
           id: "1",
           role: "ai",
-          content: result.data.content,
-          timestamp: new Date()
+          content: result.data.content
         }
       ]);
     } else {
