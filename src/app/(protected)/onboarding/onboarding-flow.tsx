@@ -135,11 +135,14 @@ export function OnboardingFlow() {
         studyHoursPerDay: formData.study_hours_per_day,
       };
 
-      const { error } = await submitOnboardingAction(payload);
+      const result = await submitOnboardingAction(payload);
       
-      if (error) {
-        setSubmitError(error);
+      if (result.error) {
+        setSubmitError(result.error);
       } else {
+        // Profile saved. Plan may or may not have generated —
+        // either way, redirect to dashboard. If planFailed, check-in
+        // will show an honest "needs_plan" message.
         router.push("/dashboard");
       }
     });
@@ -520,7 +523,7 @@ export function OnboardingFlow() {
           {isPending ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />
-              <span>Saving...</span>
+              <span>Generating your study plan...</span>
             </>
           ) : currentStep === steps.length - 1 ? (
             "Complete Setup"

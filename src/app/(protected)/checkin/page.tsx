@@ -23,10 +23,12 @@ export default function CheckinPage() {
     const result = await submitCheckinAction({ moodText: moodText.trim() });
 
     if (result.status === "success" && result.session_id) {
-      // Stub: the real session page doesn't exist yet, but we route there
       router.push(`/session/${result.session_id}`);
-    } else if (result.status === "empty_queue") {
-      setError(result.error || "Queue is empty.");
+    } else if (result.status === "needs_plan") {
+      // User has no plan at all — send them to onboarding to generate one
+      router.push("/onboarding");
+    } else if (result.status === "plan_complete") {
+      setError(result.error || "You've completed all topics in your plan.");
       setIsSubmitting(false);
     } else {
       setError(result.error || "An unexpected error occurred.");

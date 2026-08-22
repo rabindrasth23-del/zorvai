@@ -32,6 +32,17 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    // Rate limit: 10 AI requests per 60s per user (Upstash Redis)
+    const { aiRouteLimiter } = await import('@/lib/rate-limiter');
+    const { success, reset } = await aiRouteLimiter.limit(user.id);
+    if (!success) {
+      const retryAfter = Math.max(1, Math.ceil((reset - Date.now()) / 1000));
+      return NextResponse.json(
+        { error: 'Too many requests. Please wait before trying again.' },
+        { status: 429, headers: { 'Retry-After': String(retryAfter) } }
+      );
+    }
+
     // 2. Parse request
     const body = await request.json();
     const parsed = ChallengeRequestSchema.safeParse(body);
@@ -103,12 +114,18 @@ export async function POST(request: NextRequest) {
       .single();
 
     // IDEMPOTENCY CHECK: If questions already exist, return them immediately
+    // SECURITY: Strip expected_answer before sending to client
     if (sessionResult?.challenge_qas && Array.isArray(sessionResult.challenge_qas) && sessionResult.challenge_qas.length === 4) {
+      const safeQuestions = sessionResult.challenge_qas.map((q: any) => ({
+        type: q.type,
+        question: q.question,
+        // expected_answer intentionally omitted — server-side only
+      }));
       return NextResponse.json({
         session_id,
         phase: 'challenge',
-        questions: sessionResult.challenge_qas,
-        ai_provider: 'cached', // Explicitly note that this was cached
+        questions: safeQuestions,
+        ai_provider: 'cached',
         ai_latency_ms: 0,
       });
     }
@@ -132,20 +149,25 @@ export async function POST(request: NextRequest) {
       recallTranscript,
     });
 
-    // 8. Store the questions in session_results
+    // 8. Store the FULL questions (with expected_answer) in session_results — server-side only
     await admin
       .from('session_results')
       .update({ challenge_qas: result.data.questions })
       .eq('session_id', session_id);
 
-    // 9. Advance phase to 'feedback' (student needs to answer first,
-    //    but we stay in 'challenge' until evaluate is called)
-    // NOTE: Phase stays at 'challenge' — the evaluate endpoint advances to 'feedback'
+    // 9. Phase stays at 'challenge' — the evaluate endpoint advances to 'done'
+
+    // SECURITY: Strip expected_answer before sending to client
+    const safeQuestions = result.data.questions.map((q) => ({
+      type: q.type,
+      question: q.question,
+      // expected_answer intentionally omitted — never sent to browser
+    }));
 
     return NextResponse.json({
       session_id,
       phase: 'challenge',
-      questions: result.data.questions,
+      questions: safeQuestions,
       ai_provider: result.provider,
       ai_latency_ms: result.latencyMs,
     });

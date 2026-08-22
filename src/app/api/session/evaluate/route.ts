@@ -19,7 +19,8 @@ import type { FeedbackResponse } from '@/lib/ai/schema';
 const AnswerSchema = z.object({
   question: z.string().min(1),
   student_answer: z.string().min(1),
-  expected_answer: z.string().min(1),
+  // expected_answer is NO LONGER accepted from the client.
+  // It is fetched server-side from session_results.challenge_qas.
 });
 
 const EvaluateRequestSchema = z.object({
@@ -38,6 +39,17 @@ export async function POST(request: NextRequest) {
 
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // Rate limit: 10 AI requests per 60s per user (Upstash Redis)
+    const { aiRouteLimiter } = await import('@/lib/rate-limiter');
+    const { success, reset } = await aiRouteLimiter.limit(user.id);
+    if (!success) {
+      const retryAfter = Math.max(1, Math.ceil((reset - Date.now()) / 1000));
+      return NextResponse.json(
+        { error: 'Too many requests. Please wait before trying again.' },
+        { status: 429, headers: { 'Retry-After': String(retryAfter) } }
+      );
     }
 
     // 2. Parse request
@@ -81,7 +93,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 4. Get student + topic
+    // 4. Get student + topic + stored challenge questions (with expected_answer)
     const { data: student } = await admin
       .from('students')
       .select('*')
@@ -102,7 +114,17 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Topic not found' }, { status: 404 });
     }
 
-    // 5. Call AI for feedback
+    // SECURITY: Fetch expected_answer from server-side storage, not from client
+    const { data: sessionResult } = await admin
+      .from('session_results')
+      .select('challenge_qas')
+      .eq('session_id', session_id)
+      .single();
+
+    const storedQuestions: Array<{ question: string; expected_answer: string }> =
+      sessionResult?.challenge_qas || [];
+
+    // 5. Call AI for feedback — pair student answers with server-stored expected answers
     const result = await runAICall<FeedbackResponse>('feedback', {
       student: {
         name: student.name,
@@ -116,11 +138,17 @@ export async function POST(request: NextRequest) {
         title: topic.title,
         description: topic.description,
       },
-      questionsAndAnswers: answers.map((a) => ({
-        question: a.question,
-        studentAnswer: a.student_answer,
-        expectedAnswer: a.expected_answer,
-      })),
+      questionsAndAnswers: answers.map((a) => {
+        // Find the matching server-stored question to get the real expected_answer
+        const stored = storedQuestions.find(
+          (sq) => sq.question === a.question
+        );
+        return {
+          question: a.question,
+          studentAnswer: a.student_answer,
+          expectedAnswer: stored?.expected_answer || '(answer not found)',
+        };
+      }),
     });
 
     const feedback = result.data;

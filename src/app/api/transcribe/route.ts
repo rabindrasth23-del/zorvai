@@ -22,6 +22,17 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    // Rate limit: 5 transcription requests per 60s per user (Upstash Redis)
+    const { transcribeLimiter } = await import('@/lib/rate-limiter');
+    const { success, reset } = await transcribeLimiter.limit(user.id);
+    if (!success) {
+      const retryAfter = Math.max(1, Math.ceil((reset - Date.now()) / 1000));
+      return NextResponse.json(
+        { error: 'Too many transcription requests. Please wait before trying again.' },
+        { status: 429, headers: { 'Retry-After': String(retryAfter) } }
+      );
+    }
+
     // 2. Fetch student language
     const admin = createAdminClient();
     const { data: student } = await admin

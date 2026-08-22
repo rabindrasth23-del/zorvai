@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { Loader2, Activity, Zap, CheckCircle2, XCircle } from "lucide-react";
-import { motion } from "motion/react";
+import { motion, useReducedMotion } from "motion/react";
 
 interface LogEntry {
   provider: string;
@@ -23,6 +23,7 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [metrics, setMetrics] = useState<MetricsData | null>(null);
+  const shouldReduceMotion = useReducedMotion();
 
   useEffect(() => {
     const fetchMetrics = async () => {
@@ -106,7 +107,12 @@ export default function AdminPage() {
   if (!metrics) return null;
 
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <motion.div
+      className="space-y-8"
+      initial={shouldReduceMotion ? false : { opacity: 0, y: 16 }}
+      animate={shouldReduceMotion ? {} : { opacity: 1, y: 0 }}
+      transition={{ type: "spring", stiffness: 200, damping: 25, mass: 1 }}
+    >
       <div className="flex items-end justify-between border-b border-[var(--color-border)] pb-4">
         <div>
           <h2 className="text-3xl font-display font-medium tracking-tight text-[var(--color-text)]">API Usage & Spend</h2>
@@ -115,7 +121,7 @@ export default function AdminPage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <div className="bg-[var(--color-surface)] border border-[var(--color-border)] p-6 rounded-[var(--radius-xl)] shadow-sm">
+        <div className="bg-[var(--color-surface)] border border-[var(--color-border)] p-6 rounded-[var(--radius-xl)] shadow-[var(--shadow-sm)] transition-all duration-200 hover:shadow-[var(--shadow-md)] hover:border-[var(--color-border-focus)]">
           <div className="flex items-center gap-3 text-[var(--color-text-muted)] mb-2">
             <Activity className="w-5 h-5" />
             <span className="font-sans text-sm font-medium uppercase tracking-wider">Total Calls</span>
@@ -125,7 +131,7 @@ export default function AdminPage() {
           </p>
         </div>
         
-        <div className="bg-[var(--color-surface)] border border-[var(--color-border)] p-6 rounded-[var(--radius-xl)] shadow-sm">
+        <div className="bg-[var(--color-surface)] border border-[var(--color-border)] p-6 rounded-[var(--radius-xl)] shadow-[var(--shadow-sm)] transition-all duration-200 hover:shadow-[var(--shadow-md)] hover:border-[var(--color-border-focus)]">
           <div className="flex items-center gap-3 text-[var(--color-text-muted)] mb-2">
             <CheckCircle2 className="w-5 h-5" />
             <span className="font-sans text-sm font-medium uppercase tracking-wider">Success Rate</span>
@@ -143,38 +149,59 @@ export default function AdminPage() {
             <Zap className="w-5 h-5 text-[var(--color-primary)]" />
             Spend by Model (Provider)
           </h3>
-          <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[var(--radius-xl)] overflow-hidden shadow-sm">
-            <table className="w-full text-left font-sans text-sm">
-              <thead className="bg-[var(--color-bg)] text-[var(--color-text-muted)] border-b border-[var(--color-border)] uppercase text-[11px] tracking-widest">
-                <tr>
-                  <th className="px-6 py-4 font-medium">Provider</th>
-                  <th className="px-6 py-4 font-medium text-right">Total Calls</th>
-                  <th className="px-6 py-4 font-medium text-right">Success</th>
-                  <th className="px-6 py-4 font-medium text-right">Avg Latency</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[var(--color-border)]">
-                {Object.entries(metrics.providerStats).map(([provider, stats]) => (
-                  <tr key={provider} className="hover:bg-[var(--color-bg)]/50 transition-colors">
-                    <td className="px-6 py-4 font-medium text-[var(--color-text)]">{provider}</td>
-                    <td className="px-6 py-4 text-right text-[var(--color-text-muted)]">{stats.calls.toLocaleString()}</td>
-                    <td className="px-6 py-4 text-right">
-                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-                        stats.success / stats.calls > 0.9 ? 'bg-[var(--color-success)]/10 text-[var(--color-success)]' : 'bg-[var(--color-warning)]/10 text-[var(--color-warning)]'
-                      }`}>
-                        {((stats.success / stats.calls) * 100).toFixed(1)}%
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-right text-[var(--color-text-muted)]">{Math.round(stats.avgLatency)}ms</td>
-                  </tr>
-                ))}
-                {Object.keys(metrics.providerStats).length === 0 && (
+          <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[var(--radius-xl)] overflow-hidden shadow-[var(--shadow-sm)]">
+            {/* Desktop table */}
+            <div className="hidden md:block">
+              <table className="w-full text-left font-sans text-sm">
+                <thead className="bg-[var(--color-bg)] text-[var(--color-text-muted)] border-b border-[var(--color-border)] uppercase text-[11px] tracking-widest">
                   <tr>
-                    <td colSpan={4} className="px-6 py-8 text-center text-[var(--color-text-muted)]">No provider data available.</td>
+                    <th className="px-6 py-4 font-medium">Provider</th>
+                    <th className="px-6 py-4 font-medium text-right">Total Calls</th>
+                    <th className="px-6 py-4 font-medium text-right">Success</th>
+                    <th className="px-6 py-4 font-medium text-right">Avg Latency</th>
                   </tr>
-                )}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-[var(--color-border)]">
+                  {Object.entries(metrics.providerStats).map(([provider, stats]) => (
+                    <tr key={provider} className="hover:bg-[var(--color-bg)]/50 transition-colors">
+                      <td className="px-6 py-4 font-medium text-[var(--color-text)]">{provider}</td>
+                      <td className="px-6 py-4 text-right text-[var(--color-text-muted)]">{stats.calls.toLocaleString()}</td>
+                      <td className="px-6 py-4 text-right">
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                          stats.success / stats.calls > 0.9 ? 'bg-[var(--color-success)]/10 text-[var(--color-success)]' : 'bg-[var(--color-warning)]/10 text-[var(--color-warning)]'
+                        }`}>
+                          {((stats.success / stats.calls) * 100).toFixed(1)}%
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-right text-[var(--color-text-muted)]">{Math.round(stats.avgLatency)}ms</td>
+                    </tr>
+                  ))}
+                  {Object.keys(metrics.providerStats).length === 0 && (
+                    <tr>
+                      <td colSpan={4} className="px-6 py-8 text-center text-[var(--color-text-muted)]">No provider data available.</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+            {/* Mobile cards */}
+            <div className="md:hidden divide-y divide-[var(--color-border)]">
+              {Object.entries(metrics.providerStats).map(([provider, stats]) => (
+                <div key={provider} className="p-4 flex flex-col gap-1">
+                  <p className="font-sans text-sm font-medium text-[var(--color-text)]">{provider}</p>
+                  <div className="flex items-center gap-3 text-xs text-[var(--color-text-muted)] font-sans">
+                    <span>{stats.calls} calls</span>
+                    <span className={stats.success / stats.calls > 0.9 ? 'text-[var(--color-success)]' : 'text-[var(--color-warning)]'}>
+                      {((stats.success / stats.calls) * 100).toFixed(1)}% success
+                    </span>
+                    <span>{Math.round(stats.avgLatency)}ms avg</span>
+                  </div>
+                </div>
+              ))}
+              {Object.keys(metrics.providerStats).length === 0 && (
+                <div className="p-6 text-center text-[var(--color-text-muted)] text-sm">No provider data available.</div>
+              )}
+            </div>
           </div>
         </div>
 
@@ -184,39 +211,59 @@ export default function AdminPage() {
             <Activity className="w-5 h-5 text-[var(--color-primary)]" />
             Calls by Phase (Call Type)
           </h3>
-          <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[var(--radius-xl)] overflow-hidden shadow-sm">
-            <table className="w-full text-left font-sans text-sm">
-              <thead className="bg-[var(--color-bg)] text-[var(--color-text-muted)] border-b border-[var(--color-border)] uppercase text-[11px] tracking-widest">
-                <tr>
-                  <th className="px-6 py-4 font-medium">Phase</th>
-                  <th className="px-6 py-4 font-medium text-right">Total Calls</th>
-                  <th className="px-6 py-4 font-medium text-right">Success</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[var(--color-border)]">
-                {Object.entries(metrics.typeStats).map(([type, stats]) => (
-                  <tr key={type} className="hover:bg-[var(--color-bg)]/50 transition-colors">
-                    <td className="px-6 py-4 font-medium text-[var(--color-text)]">{type}</td>
-                    <td className="px-6 py-4 text-right text-[var(--color-text-muted)]">{stats.calls.toLocaleString()}</td>
-                    <td className="px-6 py-4 text-right">
-                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-                        stats.success / stats.calls > 0.9 ? 'bg-[var(--color-success)]/10 text-[var(--color-success)]' : 'bg-[var(--color-warning)]/10 text-[var(--color-warning)]'
-                      }`}>
-                        {((stats.success / stats.calls) * 100).toFixed(1)}%
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-                {Object.keys(metrics.typeStats).length === 0 && (
+          <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[var(--radius-xl)] overflow-hidden shadow-[var(--shadow-sm)]">
+            {/* Desktop table */}
+            <div className="hidden md:block">
+              <table className="w-full text-left font-sans text-sm">
+                <thead className="bg-[var(--color-bg)] text-[var(--color-text-muted)] border-b border-[var(--color-border)] uppercase text-[11px] tracking-widest">
                   <tr>
-                    <td colSpan={3} className="px-6 py-8 text-center text-[var(--color-text-muted)]">No phase data available.</td>
+                    <th className="px-6 py-4 font-medium">Phase</th>
+                    <th className="px-6 py-4 font-medium text-right">Total Calls</th>
+                    <th className="px-6 py-4 font-medium text-right">Success</th>
                   </tr>
-                )}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-[var(--color-border)]">
+                  {Object.entries(metrics.typeStats).map(([type, stats]) => (
+                    <tr key={type} className="hover:bg-[var(--color-bg)]/50 transition-colors">
+                      <td className="px-6 py-4 font-medium text-[var(--color-text)]">{type}</td>
+                      <td className="px-6 py-4 text-right text-[var(--color-text-muted)]">{stats.calls.toLocaleString()}</td>
+                      <td className="px-6 py-4 text-right">
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                          stats.success / stats.calls > 0.9 ? 'bg-[var(--color-success)]/10 text-[var(--color-success)]' : 'bg-[var(--color-warning)]/10 text-[var(--color-warning)]'
+                        }`}>
+                          {((stats.success / stats.calls) * 100).toFixed(1)}%
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                  {Object.keys(metrics.typeStats).length === 0 && (
+                    <tr>
+                      <td colSpan={3} className="px-6 py-8 text-center text-[var(--color-text-muted)]">No phase data available.</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+            {/* Mobile cards */}
+            <div className="md:hidden divide-y divide-[var(--color-border)]">
+              {Object.entries(metrics.typeStats).map(([type, stats]) => (
+                <div key={type} className="p-4 flex items-center justify-between">
+                  <p className="font-sans text-sm font-medium text-[var(--color-text)]">{type}</p>
+                  <div className="flex items-center gap-3 text-xs text-[var(--color-text-muted)] font-sans">
+                    <span>{stats.calls} calls</span>
+                    <span className={stats.success / stats.calls > 0.9 ? 'text-[var(--color-success)]' : 'text-[var(--color-warning)]'}>
+                      {((stats.success / stats.calls) * 100).toFixed(1)}%
+                    </span>
+                  </div>
+                </div>
+              ))}
+              {Object.keys(metrics.typeStats).length === 0 && (
+                <div className="p-6 text-center text-[var(--color-text-muted)] text-sm">No phase data available.</div>
+              )}
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }

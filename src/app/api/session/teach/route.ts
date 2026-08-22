@@ -32,6 +32,17 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    // Rate limit: 10 AI requests per 60s per user (Upstash Redis)
+    const { aiRouteLimiter } = await import('@/lib/rate-limiter');
+    const { success, reset } = await aiRouteLimiter.limit(user.id);
+    if (!success) {
+      const retryAfter = Math.max(1, Math.ceil((reset - Date.now()) / 1000));
+      return NextResponse.json(
+        { error: 'Too many requests. Please wait before trying again.' },
+        { status: 429, headers: { 'Retry-After': String(retryAfter) } }
+      );
+    }
+
     // 2. Verify student + parse request
     const admin = createAdminClient();
     const { data: student } = await admin

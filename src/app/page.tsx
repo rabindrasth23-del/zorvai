@@ -65,14 +65,14 @@ export default function LandingPage() {
         {/* Early Adopter CTA (dark) → Guarantee (teal) — dramatic angled cut */}
         <AngledDivider
           bgColor="var(--color-text)"
-          fillColor="#1B4F5C"
+          fillColor="var(--color-primary)"
         />
 
         <GuaranteeSection />
 
         {/* Guarantee (teal) → Founder Story (surface) — angled, flipped */}
         <AngledDivider
-          bgColor="#1B4F5C"
+          bgColor="var(--color-primary)"
           fillColor="var(--color-surface)"
           flip
         />

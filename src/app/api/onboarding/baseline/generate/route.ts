@@ -35,6 +35,17 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    // Rate limit: 3 requests per 5 minutes per user (Upstash Redis)
+    const { planLimiter } = await import('@/lib/rate-limiter');
+    const { success, reset } = await planLimiter.limit(user.id);
+    if (!success) {
+      const retryAfter = Math.max(1, Math.ceil((reset - Date.now()) / 1000));
+      return NextResponse.json(
+        { error: 'Too many requests. Please wait before trying again.' },
+        { status: 429, headers: { 'Retry-After': String(retryAfter) } }
+      );
+    }
+
     const body = await request.json();
     const { targetSubject, confidence, grade } = body;
 

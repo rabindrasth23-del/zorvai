@@ -8,7 +8,7 @@ import { ChevronRight, CheckCircle2 } from 'lucide-react';
 export interface ChallengeQuestion {
   type: 'fact' | 'understanding' | 'application' | 'mixed';
   question: string;
-  expected_answer: string;
+  // expected_answer is intentionally omitted — server-side only, never sent to client
 }
 
 interface QuizChallengeProps {

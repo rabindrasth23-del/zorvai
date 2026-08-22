@@ -68,9 +68,9 @@ export function ChallengePhaseClient({ sessionId, topic }: ChallengePhaseClientP
 
     try {
       // Map the answers back alongside the questions
+      // SECURITY: expected_answer is NOT sent to the server — it's fetched server-side
       const payload = questions.map((q, idx) => ({
         question: q.question,
-        expected_answer: q.expected_answer,
         student_answer: answers[idx]
       }));
 

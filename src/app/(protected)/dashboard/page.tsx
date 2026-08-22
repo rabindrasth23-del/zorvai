@@ -1,11 +1,11 @@
-import { StatCard } from "@/components/ui/stat-card";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { CalendarCheck2, Activity, LayoutDashboard, BookOpen, History } from "lucide-react";
+import { CalendarCheck2, Activity, BookOpen, History, Sparkles } from "lucide-react";
 import { InviteCodeCard, LinkNotificationBanner } from "@/components/dashboard/parent-link-widgets";
 import { CircularProgress } from "@/components/ui/circular-progress";
+import StaggerChildren from "@/components/motion/stagger-children";
 
 export default async function DashboardPage({
   searchParams,
@@ -34,6 +34,7 @@ export default async function DashboardPage({
   // Fallback to "Student" ONLY if the row exists but the name is empty
   const studentName = student.name || "Student";
   const targetHours = student.study_hours_per_day ?? 0;
+  const targetMinutes = Math.round(targetHours * 60);
   const subjects = student.subjects || [];
   const inviteCode = student.invite_code || "";
 
@@ -74,7 +75,7 @@ export default async function DashboardPage({
   const sessionsList: any[] = [];
 
   return (
-    <div className="flex flex-col gap-12 animate-element h-full max-w-5xl mx-auto pb-16 px-4">
+    <div className="flex flex-col gap-12 h-full max-w-5xl mx-auto pb-16 px-4">
 
       {/* Link notification banners */}
       {linkBanners.map((b) => (
@@ -86,58 +87,64 @@ export default async function DashboardPage({
         />
       ))}
 
-      <header className="w-full relative overflow-hidden rounded-[var(--radius-xl)] bg-[var(--color-primary)] text-white p-8 sm:p-10 shadow-md">
-        <div className="absolute top-0 right-0 opacity-10 pointer-events-none transform translate-x-1/4 -translate-y-1/4">
-          <BookOpen className="w-64 h-64" />
-        </div>
-        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
-          <div>
-            <h1 className="text-3xl md:text-4xl font-display tracking-tight text-white mb-2">
-              Welcome back, {studentName}
-            </h1>
-            <p className="text-white/80 font-sans text-lg">
-              Ready to hit your {targetHours}-hour target today?
-            </p>
+      {/* Welcome header — animated entrance */}
+      <StaggerChildren delay={0}>
+        <header className="w-full relative overflow-hidden rounded-[var(--radius-xl)] bg-[var(--color-primary)] text-white p-8 sm:p-10 shadow-md">
+          <div className="absolute top-0 right-0 opacity-10 pointer-events-none transform translate-x-1/4 -translate-y-1/4">
+            <BookOpen className="w-64 h-64" />
           </div>
-          <Button asChild className="rounded-full h-12 px-8 font-sans font-medium bg-white text-[var(--color-primary)] hover:bg-white/90 shadow-sm transition-all hover:scale-105 shrink-0">
-            <Link href="/checkin">
-              <CalendarCheck2 className="mr-2 w-5 h-5" />
-              Start Daily Check-in
-            </Link>
-          </Button>
-        </div>
-      </header>
+          <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+            <div>
+              <h1 className="text-3xl md:text-4xl font-display tracking-tight text-white mb-2">
+                Welcome back, {studentName}
+              </h1>
+              <p className="text-white/80 font-sans text-lg">
+                Ready to hit your {targetHours}-hour target today?
+              </p>
+            </div>
+            <Button asChild className="rounded-full h-12 px-8 font-sans font-medium bg-white text-[var(--color-primary)] hover:bg-white/90 shadow-sm transition-all shrink-0 cursor-pointer">
+              <Link href="/checkin">
+                <CalendarCheck2 className="mr-2 w-5 h-5" />
+                Start Daily Check-in
+              </Link>
+            </Button>
+          </div>
+        </header>
+      </StaggerChildren>
 
-      {/* BENTO GRID */}
+      {/* BENTO GRID — staggered entrance */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         
         {/* Metric 1: Progress */}
-        <section className="bg-surface border border-border rounded-[var(--radius-xl)] shadow-[var(--shadow-sm)] p-6 md:p-8 flex flex-col items-center justify-center text-center">
-          <h2 className="text-lg font-display font-medium text-[var(--color-text)] mb-6 self-start">Today's Progress</h2>
-          <CircularProgress 
-            value={0} 
-            size={160} 
-            strokeWidth={12} 
-            label="0 / 120 mins" 
-            colorClass="text-[var(--color-accent)]"
-          />
-          <p className="text-[var(--text-body-sm)] text-[var(--color-text-muted)] font-sans mt-6">
-            Start a session to fill your ring.
-          </p>
-        </section>
+        <StaggerChildren delay={0.06}>
+          <section className="bg-surface border border-border rounded-[var(--radius-xl)] shadow-[var(--shadow-sm)] p-6 md:p-8 flex flex-col items-center justify-center text-center transition-shadow duration-200 hover:shadow-[var(--shadow-md)] h-full">
+            <h2 className="text-lg font-display font-medium text-[var(--color-text)] mb-6 self-start">Today&#39;s Progress</h2>
+            <CircularProgress 
+              value={0} 
+              size={160} 
+              strokeWidth={12} 
+              label={`0 / ${targetMinutes} mins`}
+              colorClass="text-[var(--color-accent)]"
+            />
+            <p className="text-[var(--text-body-sm)] text-[var(--color-text-muted)] font-sans mt-6">
+              Start a session to fill your ring.
+            </p>
+          </section>
+        </StaggerChildren>
 
         {/* Metric 2: Streak & Sessions */}
-        <section className="md:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-6">
+        <StaggerChildren delay={0.12} className="md:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-6">
           {hasSessions ? (
             <>
-              <div className="bg-surface border border-border rounded-[var(--radius-xl)] shadow-[var(--shadow-sm)] p-6 flex flex-col justify-center">
+              <div className="bg-surface border border-border rounded-[var(--radius-xl)] shadow-[var(--shadow-sm)] p-6 flex flex-col justify-center transition-all duration-200 hover:shadow-[var(--shadow-md)] hover:border-[var(--color-border-focus)]">
                 <div className="w-12 h-12 rounded-full bg-[var(--color-success)]/10 flex items-center justify-center text-[var(--color-success)] mb-4">
                   <Activity className="w-6 h-6" />
                 </div>
                 <h3 className="text-[var(--color-text-muted)] font-sans text-sm font-medium uppercase tracking-wider mb-1">Current Streak</h3>
-                <p className="text-4xl font-display font-semibold text-[var(--color-text)]">0 <span className="text-xl text-[var(--color-text-muted)] font-normal">days</span></p>
+                <p className="text-4xl font-display font-semibold text-[var(--color-text)]">&mdash;</p>
+                <p className="text-xs text-[var(--color-text-muted)] font-sans mt-1">Streak tracking coming soon</p>
               </div>
-              <div className="bg-surface border border-border rounded-[var(--radius-xl)] shadow-[var(--shadow-sm)] p-6 flex flex-col justify-center">
+              <div className="bg-surface border border-border rounded-[var(--radius-xl)] shadow-[var(--shadow-sm)] p-6 flex flex-col justify-center transition-all duration-200 hover:shadow-[var(--shadow-md)] hover:border-[var(--color-border-focus)]">
                 <div className="w-12 h-12 rounded-full bg-[var(--color-primary)]/10 flex items-center justify-center text-[var(--color-primary)] mb-4">
                   <History className="w-6 h-6" />
                 </div>
@@ -146,29 +153,38 @@ export default async function DashboardPage({
               </div>
             </>
           ) : (
-            <div className="sm:col-span-2 rounded-[var(--radius-xl)] border border-[var(--color-border)] bg-surface p-8 flex flex-col items-center justify-center text-center shadow-[var(--shadow-sm)] h-full">
-              <div className="w-16 h-16 rounded-full bg-[var(--color-primary)]/10 flex items-center justify-center mb-5">
-                <Activity className="w-8 h-8 text-[var(--color-primary)]" />
+            <div className="sm:col-span-2 rounded-[var(--radius-xl)] border border-[var(--color-border)] bg-surface p-8 sm:p-10 flex flex-col items-center justify-center text-center shadow-[var(--shadow-sm)] h-full">
+              <div className="w-16 h-16 rounded-full bg-[var(--color-accent)]/10 flex items-center justify-center mb-5">
+                <Sparkles className="w-8 h-8 text-[var(--color-accent)]" />
               </div>
               <h3 className="font-display font-medium text-[var(--color-text)] text-xl mb-2">
-                No sessions yet.
+                Your journey starts here
               </h3>
-              <p className="text-[var(--color-text-muted)] text-[var(--text-body)] max-w-sm font-sans leading-relaxed">
-                Complete an onboarding check-in to start building your streak and mastery score.
+              <p className="text-[var(--color-text-muted)] text-[var(--text-body)] max-w-sm font-sans leading-relaxed mb-6">
+                Complete your daily check-in to kick off your first study session. Each one builds your streak and sharpens your mastery.
               </p>
+              <Button asChild className="rounded-full px-6 h-10 font-sans font-medium bg-[var(--color-accent)] text-white hover:bg-[var(--color-accent)]/90 shadow-sm cursor-pointer">
+                <Link href="/checkin">
+                  <CalendarCheck2 className="mr-2 w-4 h-4" />
+                  Start check-in
+                </Link>
+              </Button>
             </div>
           )}
-        </section>
+        </StaggerChildren>
 
         {/* Parent Linking */}
-        <section className="bg-surface border border-border rounded-[var(--radius-xl)] shadow-[var(--shadow-sm)] p-6 md:p-8 md:col-span-3">
-          <h2 className="text-lg font-display font-medium text-[var(--color-text)] mb-6">Parent Connection</h2>
-          <div className="max-w-md">
-            <InviteCodeCard code={inviteCode} />
-          </div>
-        </section>
+        <StaggerChildren delay={0.18} className="md:col-span-3">
+          <section className="bg-surface border border-border rounded-[var(--radius-xl)] shadow-[var(--shadow-sm)] p-6 md:p-8">
+            <h2 className="text-lg font-display font-medium text-[var(--color-text)] mb-6">Parent Connection</h2>
+            <div className="max-w-md">
+              <InviteCodeCard code={inviteCode} />
+            </div>
+          </section>
+        </StaggerChildren>
 
       </div>
     </div>
   );
 }
+
