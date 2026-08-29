@@ -49,6 +49,7 @@ export default async function ProtectedLayout({
   const isStudentOnboarding = currentPath.startsWith("/onboarding");
   const isParentOnboarding = currentPath.startsWith("/parent/onboarding");
   const isParentRoute = currentPath.startsWith("/parent");
+  const isDashboardRoute = currentPath.startsWith("/dashboard");
 
   // --- STUDENT PATH ---
   if (student) {
@@ -93,7 +94,7 @@ export default async function ProtectedLayout({
 
   return (
     <div className="min-h-screen bg-[var(--color-bg)] flex flex-col md:flex-row">
-      {(!isStudentOnboarding && !isParentRoute) && (
+      {(!isStudentOnboarding && !isParentRoute && !isDashboardRoute) && (
         <AppSidebar />
       )}
       <main className="flex-1 flex flex-col w-full h-screen overflow-y-auto">

@@ -1,23 +1,14 @@
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import Link from "next/link";
+import { BookOpen, CalendarDays } from "lucide-react";
 import {
-  Activity,
-  Clock,
-  Target,
-  BookOpen,
-  Sparkles,
-  CalendarCheck2,
-} from "lucide-react";
-import {
-  InviteCodeCard,
   LinkNotificationBanner,
 } from "@/components/dashboard/parent-link-widgets";
-import { LinearProgress } from "@/components/ui/linear-progress";
-import { StudentDashboardHeader } from "@/components/dashboard/student-dashboard-header";
-import { HeroBanner } from "@/components/dashboard/hero-banner";
-import { WeeklyChart } from "@/components/dashboard/weekly-chart";
-import { DashboardBottomNav } from "@/components/dashboard/dashboard-bottom-nav";
+import { TopicFlowCard } from "@/components/dashboard/topic-flow-card";
+import {
+  ActivitySidebar,
+  type ActivityItem,
+} from "@/components/dashboard/activity-sidebar";
 import StaggerChildren from "@/components/motion/stagger-children";
 
 export default async function DashboardPage({
@@ -42,15 +33,11 @@ export default async function DashboardPage({
 
   if (error || !student) {
     throw new Error(
-      `Critical State Error: Failed to load student profile (Layout guard may have been bypassed). Details: ${error?.message || "Profile not found"}`
+      `Critical State Error: Failed to load student profile. Details: ${error?.message || "Profile not found"}`
     );
   }
 
   const studentName = student.name || "Student";
-  const targetHours = student.study_hours_per_day ?? 0;
-  const inviteCode = student.invite_code || "";
-
-  // ── Admin client for guarantee + parent links ──
   const admin = createAdminClient();
 
   // ── Unnotified parent links ──
@@ -80,35 +67,7 @@ export default async function DashboardPage({
     }
   }
 
-  // ── Completed sessions count ──
-  const { count: completedCount } = await supabase
-    .from("sessions")
-    .select("*", { count: "exact", head: true })
-    .eq("student_id", user.id)
-    .eq("status", "completed");
-
-  const sessionCount = completedCount || 0;
-  const hasSessions = sessionCount > 0;
-
-  // ── Total study hours (completed sessions with valid ended_at only) ──
-  const { data: completedSessions } = await supabase
-    .from("sessions")
-    .select("started_at, ended_at")
-    .eq("student_id", user.id)
-    .eq("status", "completed")
-    .not("ended_at", "is", null);
-
-  let totalStudyMinutes = 0;
-  for (const s of completedSessions || []) {
-    if (!s.ended_at) continue;
-    const start = new Date(s.started_at).getTime();
-    const end = new Date(s.ended_at).getTime();
-    totalStudyMinutes += (end - start) / (1000 * 60);
-  }
-  const totalStudyHours =
-    Math.round((totalStudyMinutes / 60) * 10) / 10;
-
-  // ── Active plan topics for mastery count ──
+  // ── Active plan topics ──
   const { data: activePlan } = await supabase
     .from("plans")
     .select("id")
@@ -117,77 +76,120 @@ export default async function DashboardPage({
     .limit(1)
     .maybeSingle();
 
-  let masteredCount = 0;
-  let totalTopics = 0;
+  let topicStatuses: Array<{
+    title: string;
+    description: string | null;
+    status: string;
+    day: number;
+  }> = [];
+
   if (activePlan) {
     const { data: topics } = await supabase
       .from("plan_topics")
-      .select("status")
-      .eq("plan_id", activePlan.id);
-    totalTopics = (topics || []).length;
-    masteredCount = (topics || []).filter(
-      (t) => t.status === "mastered"
-    ).length;
-  }
-  const masteryPercent =
-    totalTopics > 0
-      ? Math.round((masteredCount / totalTopics) * 100)
-      : 0;
+      .select("title, description, status, day")
+      .eq("plan_id", activePlan.id)
+      .order("sort_order", { ascending: true });
 
-  // ── Guarantee tracking ──
-  const { data: guarantee } = await admin
-    .from("guarantee_tracking")
-    .select("status, agreed_sessions, baseline_score, follow_up_score")
-    .eq("student_id", user.id)
-    .order("updated_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-
-  let guaranteeLabel = "";
-  let guaranteeStatus: string | null = null;
-  if (guarantee) {
-    guaranteeStatus = guarantee.status;
-    if (guarantee.status === "in_progress")
-      guaranteeLabel = "On track — keep it up!";
-    else if (guarantee.status === "needs_review")
-      guaranteeLabel = "Your progress is being reviewed";
-    else if (guarantee.status === "completed")
-      guaranteeLabel = "Congratulations! Guarantee met";
-    else guaranteeLabel = guarantee.status;
+    topicStatuses = (topics || []).map((t) => ({
+      title: t.title,
+      description: t.description,
+      status: t.status,
+      day: t.day,
+    }));
   }
 
-  // ── Weekly session data (current week, Mon–Sun) ──
-  const now = new Date();
-  const dayOfWeek = now.getDay(); // 0=Sun, 1=Mon, ...
-  const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
-  const weekStart = new Date(now);
-  weekStart.setDate(now.getDate() + mondayOffset);
-  weekStart.setHours(0, 0, 0, 0);
+  const totalTopics = topicStatuses.length;
+  const masteredCount = topicStatuses.filter(
+    (t) => t.status === "mastered"
+  ).length;
+  // re-queued collapses into Upcoming (not a 4th category)
+  const upcomingCount = topicStatuses.filter(
+    (t) => t.status === "pending" || t.status === "re-queued"
+  ).length;
 
-  const { data: weekSessions } = await supabase
+  // First pending/re-queued topic = current topic (gets visual emphasis)
+  const currentTopicIndex = topicStatuses.findIndex(
+    (t) => t.status === "pending" || t.status === "re-queued"
+  );
+
+  // ── Recent sessions (for activity sidebar) ──
+  const { data: recentSessions } = await admin
     .from("sessions")
-    .select("started_at, ended_at")
+    .select(
+      `id, status, started_at, ended_at,
+       plan_topics (title),
+       session_results (passed)`
+    )
     .eq("student_id", user.id)
     .eq("status", "completed")
-    .not("ended_at", "is", null)
-    .gte("started_at", weekStart.toISOString());
+    .order("started_at", { ascending: false })
+    .limit(5);
 
-  const weeklyData = [0, 0, 0, 0, 0, 0, 0]; // Mon–Sun
-  let weekTotalMinutes = 0;
-  for (const s of weekSessions || []) {
-    if (!s.ended_at) continue;
-    const start = new Date(s.started_at);
-    const end = new Date(s.ended_at);
-    const durationMinutes =
-      (end.getTime() - start.getTime()) / (1000 * 60);
-    const dayIndex = (start.getDay() + 6) % 7; // 0=Mon, 6=Sun
-    weeklyData[dayIndex] += durationMinutes;
-    weekTotalMinutes += durationMinutes;
+  // ── Recent check-ins (dates only — NEVER expose mood_text) ──
+  const { data: recentCheckins } = await admin
+    .from("checkins")
+    .select("id, created_at")
+    .eq("student_id", user.id)
+    .order("created_at", { ascending: false })
+    .limit(5);
+
+  // ── Build activity items ──
+  const activityItems: ActivityItem[] = [];
+
+  for (const s of recentSessions || []) {
+    const topicTitle = Array.isArray(s.plan_topics)
+      ? (s.plan_topics[0] as any)?.title
+      : (s.plan_topics as any)?.title || "Study Session";
+    const passed = Array.isArray(s.session_results)
+      ? (s.session_results[0] as any)?.passed
+      : (s.session_results as any)?.passed;
+
+    activityItems.push({
+      id: `session-${s.id}`,
+      type: "session",
+      title: topicTitle,
+      description:
+        passed === true
+          ? "Completed — Passed"
+          : passed === false
+            ? "Completed — Needs Review"
+            : "Completed",
+      date: new Date(s.started_at).toLocaleDateString("en-US", {
+        weekday: "short",
+        month: "short",
+        day: "numeric",
+      }),
+      accentColor:
+        passed === true
+          ? "var(--color-success)"
+          : passed === false
+            ? "var(--color-warning)"
+            : "var(--color-primary)",
+    });
   }
-  const hasWeeklyData = weeklyData.some((d) => d > 0);
+
+  for (const c of recentCheckins || []) {
+    activityItems.push({
+      id: `checkin-${c.id}`,
+      type: "checkin",
+      title: "Daily Check-in",
+      description: "Completed daily check-in",
+      date: new Date(c.created_at).toLocaleDateString("en-US", {
+        weekday: "short",
+        month: "short",
+        day: "numeric",
+      }),
+      accentColor: "var(--color-primary)",
+    });
+  }
+
+  activityItems.sort(
+    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+  );
+  const displayActivities = activityItems.slice(0, 8);
 
   return (
-    <div className="flex flex-col gap-6 md:gap-8 pb-24 md:pb-16">
+    <div className="flex flex-col gap-6 md:gap-8 pb-16">
       {/* Link notification banners */}
       {linkBanners.map((b) => (
         <LinkNotificationBanner
@@ -198,131 +200,97 @@ export default async function DashboardPage({
         />
       ))}
 
-      {/* ── Greeting Header ── */}
-      <StudentDashboardHeader studentName={studentName} />
-
-      {/* ── Hero Banner ── */}
-      <HeroBanner
-        guaranteeStatus={guaranteeStatus}
-        guaranteeLabel={guaranteeLabel}
-        hasSessions={hasSessions}
-        targetHours={targetHours}
-      />
-
-      {/* ── Stat Cards Row ── */}
-      <StaggerChildren delay={0.12}>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          {/* Total Sessions */}
-          <div className="bg-surface border border-[var(--color-border)] rounded-[var(--radius-lg)] p-5 shadow-[var(--shadow-xs)] hover:shadow-[var(--shadow-md)] transition-shadow duration-200">
-            <div className="w-10 h-10 rounded-full bg-[var(--color-primary)]/10 flex items-center justify-center mb-3">
-              <Activity className="w-5 h-5 text-[var(--color-primary)]" />
-            </div>
-            <p className="font-mono text-3xl font-semibold text-[var(--color-text)] tracking-tight">
-              {sessionCount}
-            </p>
-            <p className="text-xs font-sans text-[var(--color-text-muted)] mt-1 uppercase tracking-wider font-medium">
-              Total Sessions
-            </p>
-          </div>
-
-          {/* Study Hours */}
-          <div className="bg-surface border border-[var(--color-border)] rounded-[var(--radius-lg)] p-5 shadow-[var(--shadow-xs)] hover:shadow-[var(--shadow-md)] transition-shadow duration-200">
-            <div className="w-10 h-10 rounded-full bg-[var(--color-accent)]/10 flex items-center justify-center mb-3">
-              <Clock className="w-5 h-5 text-[var(--color-accent)]" />
-            </div>
-            <p className="font-mono text-3xl font-semibold text-[var(--color-text)] tracking-tight">
-              {totalStudyHours}
-            </p>
-            <p className="text-xs font-sans text-[var(--color-text-muted)] mt-1 uppercase tracking-wider font-medium">
-              Study Hours
-            </p>
-          </div>
-
-          {/* Mastery Score */}
-          <div className="bg-surface border border-[var(--color-border)] rounded-[var(--radius-lg)] p-5 shadow-[var(--shadow-xs)] hover:shadow-[var(--shadow-md)] transition-shadow duration-200">
-            <div className="w-10 h-10 rounded-full bg-[var(--color-success)]/10 flex items-center justify-center mb-3">
-              <Target className="w-5 h-5 text-[var(--color-success)]" />
-            </div>
-            <p className="font-mono text-3xl font-semibold text-[var(--color-text)] tracking-tight">
-              {masteredCount}
-              <span className="text-lg text-[var(--color-text-muted)] font-normal">
-                /{totalTopics}
-              </span>
-            </p>
-            <p className="text-xs font-sans text-[var(--color-text-muted)] mt-1 uppercase tracking-wider font-medium">
-              Topics Mastered
-            </p>
-          </div>
-        </div>
-      </StaggerChildren>
-
-      {/* ── Average Progress + Weekly Chart ── */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-        {/* Average Progress */}
-        <StaggerChildren delay={0.18}>
-          <div className="bg-surface border border-[var(--color-border)] rounded-[var(--radius-lg)] p-5 md:p-6 shadow-[var(--shadow-xs)]">
-            <h3 className="text-base font-display font-medium text-[var(--color-text)] mb-5">
-              Average Progress
-            </h3>
-            <div className="flex items-center gap-6">
-              <div className="flex-1">
-                <LinearProgress
-                  value={masteryPercent}
-                  showValue={false}
-                  colorClass="bg-[var(--color-accent)]"
-                  label="Progress"
-                />
+      {/* ── Two-Column Layout ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* ═══ Main Column (2/3) ═══ */}
+        <div className="lg:col-span-2 flex flex-col gap-6">
+          {/* Section header */}
+          <StaggerChildren delay={0}>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-[var(--color-primary)]/10 flex items-center justify-center">
+                <CalendarDays className="w-5 h-5 text-[var(--color-primary)]" />
               </div>
-              <span className="font-mono text-4xl font-bold text-[var(--color-text)] tracking-tight shrink-0">
-                {masteryPercent}
-                <span className="text-xl font-semibold text-[var(--color-text-muted)]">
-                  %
+              <h1 className="text-2xl md:text-3xl font-display font-semibold text-[var(--color-text)] tracking-tight">
+                My Study Plan
+              </h1>
+            </div>
+          </StaggerChildren>
+
+          {/* Stats row — 3 chips */}
+          <StaggerChildren delay={0.06}>
+            <div className="flex flex-wrap gap-3">
+              <div className="flex items-center gap-3 px-5 py-3 rounded-[var(--radius-lg)] bg-[var(--color-primary)]/8 border border-[var(--color-primary)]/15">
+                <span className="font-mono text-2xl font-bold text-[var(--color-primary)]">
+                  {totalTopics}
                 </span>
-              </span>
-            </div>
-          </div>
-        </StaggerChildren>
-
-        {/* Weekly Study Chart */}
-        <StaggerChildren delay={0.24}>
-          <div className="bg-surface border border-[var(--color-border)] rounded-[var(--radius-lg)] p-5 md:p-6 shadow-[var(--shadow-xs)]">
-            {hasWeeklyData ? (
-              <WeeklyChart
-                data={weeklyData}
-                totalMinutes={weekTotalMinutes}
-              />
-            ) : (
-              <div className="flex flex-col items-center justify-center text-center py-4">
-                <div className="w-12 h-12 rounded-full bg-[var(--color-muted)] flex items-center justify-center mb-3">
-                  <BookOpen className="w-6 h-6 text-[var(--color-text-muted)]" />
-                </div>
-                <h3 className="text-base font-display font-medium text-[var(--color-text)] mb-1">
-                  Weekly Study Time
-                </h3>
-                <p className="text-sm text-[var(--color-text-muted)] font-sans max-w-[220px]">
-                  Complete sessions this week to see your daily study
-                  pattern here.
-                </p>
+                <span className="text-sm font-sans text-[var(--color-text-muted)]">
+                  Total
+                </span>
               </div>
-            )}
-          </div>
-        </StaggerChildren>
-      </div>
+              <div className="flex items-center gap-3 px-5 py-3 rounded-[var(--radius-lg)] bg-[var(--color-success)]/8 border border-[var(--color-success)]/15">
+                <span className="font-mono text-2xl font-bold text-[var(--color-success)]">
+                  {masteredCount}
+                </span>
+                <span className="text-sm font-sans text-[var(--color-text-muted)]">
+                  Mastered
+                </span>
+              </div>
+              <div className="flex items-center gap-3 px-5 py-3 rounded-[var(--radius-lg)] bg-[var(--color-warning)]/8 border border-[var(--color-warning)]/15">
+                <span className="font-mono text-2xl font-bold text-[var(--color-warning)]">
+                  {upcomingCount}
+                </span>
+                <span className="text-sm font-sans text-[var(--color-text-muted)]">
+                  Upcoming
+                </span>
+              </div>
+            </div>
+          </StaggerChildren>
 
-      {/* ── Parent Connection ── */}
-      <StaggerChildren delay={0.3}>
-        <div className="bg-surface border border-[var(--color-border)] rounded-[var(--radius-lg)] p-5 md:p-6 shadow-[var(--shadow-xs)]">
-          <h3 className="text-base font-display font-medium text-[var(--color-text)] mb-4">
-            Parent Connection
-          </h3>
-          <div className="max-w-md">
-            <InviteCodeCard code={inviteCode} />
-          </div>
+          {/* Topic flow — connected cards */}
+          {topicStatuses.length > 0 ? (
+            <div className="flex flex-col">
+              {topicStatuses.map((topic, i) => {
+                const displayStatus =
+                  topic.status === "mastered"
+                    ? ("mastered" as const)
+                    : ("upcoming" as const);
+                return (
+                  <TopicFlowCard
+                    key={`${topic.title}-${i}`}
+                    title={topic.title}
+                    description={topic.description || undefined}
+                    status={displayStatus}
+                    isCurrent={i === currentTopicIndex}
+                    isLast={i === topicStatuses.length - 1}
+                    index={i}
+                  />
+                );
+              })}
+            </div>
+          ) : (
+            <div className="rounded-[var(--radius-xl)] border border-[var(--color-border)] bg-surface p-8 flex flex-col items-center text-center shadow-[var(--shadow-sm)]">
+              <div className="w-14 h-14 rounded-full bg-[var(--color-primary)]/10 flex items-center justify-center mb-4">
+                <BookOpen className="w-7 h-7 text-[var(--color-primary)]" />
+              </div>
+              <h3 className="font-display font-medium text-[var(--color-text)] text-lg mb-1">
+                No study plan yet
+              </h3>
+              <p className="text-[var(--color-text-muted)] text-sm font-sans max-w-sm">
+                Complete your onboarding to generate a personalized
+                study plan.
+              </p>
+            </div>
+          )}
         </div>
-      </StaggerChildren>
 
-      {/* ── Bottom Nav (mobile only) ── */}
-      <DashboardBottomNav />
+        {/* ═══ Sidebar (1/3) ═══ */}
+        <div className="lg:col-span-1">
+          <ActivitySidebar
+            items={displayActivities}
+            studentName={studentName}
+          />
+        </div>
+      </div>
     </div>
   );
 }
