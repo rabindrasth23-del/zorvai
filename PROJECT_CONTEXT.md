@@ -110,6 +110,9 @@ students, parents, student_parent_links, plans, plan_topics, sessions, session_r
 - Real crisis-resource directory per launch country (don't hardcode placeholder numbers).
 - Final prompt wording — first drafts written, user iterates.
 - Payment integration (eSewa/Khalti/UPI/Stripe) — not in scope for current phases.
+- Surface stale-session abandon count somewhere visible (admin dashboard or weekly summary) once one exists — currently only in Vercel function logs.
+- Curriculum/board column (`NEB`, `CBSE`, `GCSE`, etc.) + onboarding dropdown — separate from the grade/education_level wiring that already shipped. Tracked as its own curriculum-alignment item.
+- Curriculum hallucination guard (prompt-level, not infrastructure) — when the curriculum/board fix ships and the AI has a specific board name, prompt instructions should include: "if uncertain whether a claim is specific to this board's syllabus, say so rather than asserting it confidently." Applies especially to exam formats, mark cutoffs, syllabus content. No RAG needed — this is a prompt-instruction safety pattern. (Sourced from country-adaptive-one-to-one-tutor-llm.md Section 13, adapted to our architecture.)
 
 ## Build Rules
 - Backend only. No frontend until user explicitly says so.

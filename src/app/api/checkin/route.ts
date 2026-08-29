@@ -78,6 +78,8 @@ export async function POST(request: NextRequest) {
         language: student.language,
         studyHoursPerDay: student.study_hours_per_day,
         timezone: student.timezone,
+        grade: student.grade ?? undefined,
+        educationLevel: student.education_level ?? undefined,
       },
       moodText: mood_text,
     });

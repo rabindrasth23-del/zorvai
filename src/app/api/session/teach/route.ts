@@ -3,9 +3,17 @@
  *
  * Learn phase — delivers the Socratic lesson for a topic.
  * - Creates a new session (or resumes an existing active one)
+ * - Auto-abandons stale sessions (>2 hours old) instead of blocking the student
  * - Calls runAICall('teach', payload)
  * - Returns lesson content + key concepts
  */
+
+/**
+ * Sessions older than this threshold (in milliseconds) are considered stale
+ * and will be auto-abandoned when the student tries to start a new session
+ * on the same topic. 2 hours is generous — sessions are designed for ~30 min.
+ */
+const STALE_SESSION_THRESHOLD_MS = 2 * 60 * 60 * 1000; // 2 hours
 
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
@@ -77,19 +85,37 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Topic not found' }, { status: 404 });
     }
 
-    // 4. Check for an existing active session on this topic
-    let sessionId: string;
+    // 4. Resolve session — auto-abandon stale ones, resume fresh ones, or create new
     const { data: existingSession } = await admin
       .from('sessions')
-      .select('id, phase, status')
+      .select('id, phase, status, started_at')
       .eq('student_id', user.id)
       .eq('topic_id', topic_id)
       .eq('status', 'active')
       .single();
 
+    let sessionId = '';
+
     if (existingSession) {
-      // Resume existing session — verify it's still in learn phase
-      if (existingSession.phase !== 'learn') {
+      const sessionAge = Date.now() - new Date(existingSession.started_at).getTime();
+      const isStale = sessionAge > STALE_SESSION_THRESHOLD_MS;
+
+      if (isStale) {
+        // Auto-abandon the stale session — student shouldn't be blocked
+        // by a session they walked away from hours ago
+        await admin
+          .from('sessions')
+          .update({ status: 'abandoned', ended_at: new Date().toISOString() })
+          .eq('id', existingSession.id);
+
+        console.log(
+          `[/api/session/teach] Auto-abandoned stale session ${existingSession.id} ` +
+          `(age: ${Math.round(sessionAge / 60000)}min, phase: ${existingSession.phase})`
+        );
+        // sessionId stays empty → falls through to create a new session
+      } else if (existingSession.phase !== 'learn') {
+        // Non-stale session in a later phase — this is a real conflict,
+        // not a stale artifact. Direct the student to the correct phase.
         return NextResponse.json(
           {
             error: `Session is in "${existingSession.phase}" phase, not "learn". Use the appropriate endpoint.`,
@@ -98,10 +124,14 @@ export async function POST(request: NextRequest) {
           },
           { status: 409 }
         );
+      } else {
+        // Non-stale, learn-phase session — resume it
+        sessionId = existingSession.id;
       }
-      sessionId = existingSession.id;
-    } else {
-      // Create a new session
+    }
+
+    // Create a new session if we don't have one yet (no existing, or stale was abandoned)
+    if (!sessionId) {
       const { data: newSession, error: sessionError } = await admin
         .from('sessions')
         .insert({
@@ -128,6 +158,8 @@ export async function POST(request: NextRequest) {
         language: student.language,
         studyHoursPerDay: student.study_hours_per_day,
         timezone: student.timezone,
+        grade: student.grade ?? undefined,
+        educationLevel: student.education_level ?? undefined,
       },
       topic: {
         title: topic.title,
@@ -136,7 +168,15 @@ export async function POST(request: NextRequest) {
       sessionMinutes: session_minutes,
     });
 
-    // 6. Return lesson
+    // 6. Persist the initial lesson as first message in session_messages
+    // This enables conversation restore on page refresh
+    await admin.from('session_messages').insert({
+      session_id: sessionId,
+      role: 'ai',
+      content: result.data.content,
+    });
+
+    // 7. Return lesson
     return NextResponse.json({
       session_id: sessionId,
       phase: 'learn',

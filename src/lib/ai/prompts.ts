@@ -21,6 +21,8 @@ export interface StudentContext {
   language: string;
   studyHoursPerDay: number;
   timezone: string;
+  grade?: string;
+  educationLevel?: string;
 }
 
 export interface TopicContext {
@@ -30,14 +32,17 @@ export interface TopicContext {
 }
 
 function studentBlock(ctx: StudentContext): string {
-  return [
+  const lines = [
     `Student: ${ctx.name}`,
     `Country: ${ctx.country}`,
     `Field of study: ${ctx.field}`,
     `Preferred language: ${ctx.language}`,
     `Study hours/day: ${ctx.studyHoursPerDay}`,
     `Timezone: ${ctx.timezone}`,
-  ].join('\n');
+  ];
+  if (ctx.grade) lines.push(`Grade/Year: ${ctx.grade}`);
+  if (ctx.educationLevel) lines.push(`Education level: ${ctx.educationLevel}`);
+  return lines.join('\n');
 }
 
 // ---------------------------------------------------------------------------
@@ -94,6 +99,79 @@ Rules:
 - Break complex ideas into digestible steps
 - Use examples relevant to the student's context
 - key_concepts should list 3-6 core ideas the student should take away`;
+}
+
+// ---------------------------------------------------------------------------
+// 2b. Teach chat (conversational follow-up in Learn phase)
+// ---------------------------------------------------------------------------
+
+export interface ConversationMessage {
+  role: 'user' | 'ai';
+  content: string;
+}
+
+export function teachChatPrompt(
+  student: StudentContext,
+  topic: TopicContext,
+  conversationHistory: ConversationMessage[],
+  hasAttachment: boolean
+): string {
+  const historyBlock = conversationHistory
+    .map(m => `${m.role === 'ai' ? 'Zorvai' : 'Student'}: ${m.content}`)
+    .join('\n\n');
+
+  return `You are Zorvai, an AI study coach continuing a lesson conversation. Use a Socratic approach — ask questions to guide understanding.
+
+${studentBlock(student)}
+Topic: ${topic.title}
+${topic.description ? `Description: ${topic.description}` : ''}
+
+Conversation so far:
+${historyBlock}
+
+${hasAttachment ? 'The student has shared a file (image or document) with their message. Examine it carefully and reference its contents in your response. If it contains a problem, help them work through it. If it contains notes or textbook content, connect it to the lesson.' : ''}
+
+Respond with ONLY valid JSON in this exact format:
+{ "response": "Your conversational response here (use markdown formatting)" }
+
+Rules:
+- Continue naturally from the conversation above — don't repeat what was already covered
+- Answer the student's question directly, then ask a follow-up question to deepen understanding
+- Keep responses focused — one concept at a time, not a full lecture
+- Use simple, clear language appropriate for a ${student.field} student in ${student.country}
+- Use examples relevant to the student's context
+- If the student seems confused, break the concept into smaller steps
+- Never give multiple questions at once — ask exactly one follow-up question`;
+}
+
+// ---------------------------------------------------------------------------
+// 2c. Key concepts extraction (background call after conversation ends)
+// ---------------------------------------------------------------------------
+
+export function keyConceptsExtractPrompt(
+  topic: TopicContext,
+  conversationHistory: ConversationMessage[]
+): string {
+  const historyBlock = conversationHistory
+    .map(m => `${m.role === 'ai' ? 'Zorvai' : 'Student'}: ${m.content}`)
+    .join('\n\n');
+
+  return `You are analyzing a tutoring conversation to extract the key concepts that were covered.
+
+Topic: ${topic.title}
+${topic.description ? `Description: ${topic.description}` : ''}
+
+Full conversation:
+${historyBlock}
+
+Respond with ONLY valid JSON in this exact format:
+{ "key_concepts": ["concept 1", "concept 2", ...] }
+
+Rules:
+- Extract 3-8 core concepts that were actually covered in the conversation
+- Each concept should be a concise phrase (not a full sentence)
+- Include concepts the student asked about, not just what the tutor introduced
+- Focus on what was discussed, not what the topic could theoretically cover`;
 }
 
 // ---------------------------------------------------------------------------
@@ -286,6 +364,10 @@ export function getSystemPrompt(
       return planPrompt(payload.student, payload.subjects, payload.deadline);
     case 'teach':
       return teachPrompt(payload.student, payload.topic, payload.sessionMinutes ?? 30);
+    case 'teach_chat':
+      return teachChatPrompt(payload.student, payload.topic, payload.conversationHistory ?? [], payload.hasAttachment ?? false);
+    case 'key_concepts_extract':
+      return keyConceptsExtractPrompt(payload.topic, payload.conversationHistory ?? []);
     case 'recall':
       return recallPrompt();
     case 'challenge':
@@ -330,6 +412,10 @@ export function getUserMessage(
       return `Generate a 7-day study plan for the subjects: ${(payload.subjects as string[]).join(', ')}`;
     case 'teach':
       return `Teach me about: ${payload.topic.title}`;
+    case 'teach_chat':
+      return payload.message as string;
+    case 'key_concepts_extract':
+      return `Extract key concepts from this tutoring conversation about: ${payload.topic.title}`;
     case 'recall':
       return `Student's recall transcript: ${payload.transcript}`;
     case 'challenge':

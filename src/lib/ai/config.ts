@@ -14,6 +14,8 @@ export type ProviderId = 'claude_opus_5_fast' | 'gemini_3_7_flash' | 'gpt_5_6_lu
 export type CallType =
   | 'plan'
   | 'teach'
+  | 'teach_chat'
+  | 'key_concepts_extract'
   | 'recall'
   | 'challenge'
   | 'feedback'
@@ -67,7 +69,7 @@ export const PROVIDERS: Record<ProviderId, ProviderConfig> = {
   checkin_fallback: {
     id: 'checkin_fallback',
     name: 'Check-in Fallback',
-    model: process.env.CHECKIN_FALLBACK_MODEL || 'anthropic/claude-3-haiku:beta',
+    model: process.env.CHECKIN_FALLBACK_MODEL || 'anthropic/claude-3-haiku',
     baseUrl: 'https://openrouter.ai/api/v1',
     apiKeyEnv: 'OPENROUTER_API_KEY',
     timeoutMs: 10_000,
@@ -108,6 +110,8 @@ function getCheckinChain(): ProviderId[] {
 export const PROVIDER_CHAINS: Record<CallType, ProviderId[]> = {
   plan: DEFAULT_CHAIN,
   teach: TEACH_CHAIN,
+  teach_chat: TEACH_CHAIN,
+  key_concepts_extract: ['gemini_3_7_flash', 'claude_opus_5_fast'],
   recall: DEFAULT_CHAIN,
   challenge: DEFAULT_CHAIN,
   feedback: DEFAULT_CHAIN,

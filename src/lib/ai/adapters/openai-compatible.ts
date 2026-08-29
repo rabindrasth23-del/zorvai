@@ -35,8 +35,9 @@ function getClient(provider: ProviderConfig): OpenAI {
 }
 
 /**
- * Call an OpenAI-compatible provider (DeepSeek, Qwen, GLM, Kimi).
+ * Call an OpenAI-compatible provider (via OpenRouter).
  * Returns the raw text content from the provider's response.
+ * Supports multimodal content (images/PDFs) when attachment is provided.
  */
 export async function callOpenAICompatible(
   request: AdapterRequest
@@ -44,17 +45,51 @@ export async function callOpenAICompatible(
   const client = getClient(request.provider);
   const start = Date.now();
 
+  // Build user message content — plain string or multimodal array
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let userContent: any = request.userMessage;
+
+  if (request.attachment) {
+    const { base64, mimeType, filename } = request.attachment;
+    const isImage = mimeType.startsWith('image/');
+
+    if (isImage) {
+      // Images: use image_url content part with base64 data URL
+      userContent = [
+        { type: 'text', text: request.userMessage },
+        {
+          type: 'image_url',
+          image_url: {
+            url: `data:${mimeType};base64,${base64}`,
+          },
+        },
+      ];
+    } else {
+      // PDFs/documents: use OpenRouter's file content part
+      userContent = [
+        { type: 'text', text: request.userMessage },
+        {
+          type: 'file',
+          file: {
+            filename,
+            file_data: `data:${mimeType};base64,${base64}`,
+          },
+        },
+      ];
+    }
+  }
+
   const response = await client.chat.completions.create({
     model: request.provider.model,
     max_tokens: 4096,
     messages: [
       {
-        role: 'system',
+        role: 'system' as const,
         content: request.systemPrompt,
       },
       {
-        role: 'user',
-        content: request.userMessage,
+        role: 'user' as const,
+        content: userContent,
       },
     ],
   }, { signal: request.signal });

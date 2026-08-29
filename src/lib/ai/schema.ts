@@ -121,6 +121,26 @@ export const SafetyClassifierResponseSchema = z.object({
 export type SafetyClassifierResponse = z.infer<typeof SafetyClassifierResponseSchema>;
 
 // ---------------------------------------------------------------------------
+// Teach chat (conversational Learn phase — plain text response)
+// ---------------------------------------------------------------------------
+
+export const TeachChatResponseSchema = z.object({
+  response: z.string().min(1),
+});
+
+export type TeachChatResponse = z.infer<typeof TeachChatResponseSchema>;
+
+// ---------------------------------------------------------------------------
+// Key concepts extraction (background call after learn conversation)
+// ---------------------------------------------------------------------------
+
+export const KeyConceptsExtractResponseSchema = z.object({
+  key_concepts: z.array(z.string()).min(1),
+});
+
+export type KeyConceptsExtractResponse = z.infer<typeof KeyConceptsExtractResponseSchema>;
+
+// ---------------------------------------------------------------------------
 // Schema registry — maps call type to its Zod schema
 // ---------------------------------------------------------------------------
 
@@ -128,6 +148,8 @@ export type SafetyClassifierResponse = z.infer<typeof SafetyClassifierResponseSc
 export const RESPONSE_SCHEMAS: Record<CallType, z.ZodType<any>> = {
   plan: PlanResponseSchema,
   teach: TeachResponseSchema,
+  teach_chat: TeachChatResponseSchema,
+  key_concepts_extract: KeyConceptsExtractResponseSchema,
   recall: RecallResponseSchema,
   challenge: ChallengeResponseSchema,
   feedback: FeedbackResponseSchema,

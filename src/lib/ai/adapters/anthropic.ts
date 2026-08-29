@@ -26,6 +26,12 @@ export interface AdapterRequest {
   provider: ProviderConfig;
   systemPrompt: string;
   userMessage: string;
+  /** Optional file attachment for multimodal calls (images/PDFs) */
+  attachment?: {
+    base64: string;      // Base64-encoded file content
+    mimeType: string;    // e.g. 'image/jpeg', 'application/pdf'
+    filename: string;    // Original filename
+  };
   signal?: AbortSignal;
 }
 

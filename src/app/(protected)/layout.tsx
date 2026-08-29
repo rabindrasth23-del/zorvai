@@ -93,7 +93,7 @@ export default async function ProtectedLayout({
 
   return (
     <div className="min-h-screen bg-[var(--color-bg)] flex flex-col md:flex-row">
-      {(!isStudentOnboarding && !isParentOnboarding) && (
+      {(!isStudentOnboarding && !isParentRoute) && (
         <AppSidebar />
       )}
       <main className="flex-1 flex flex-col w-full h-screen overflow-y-auto">

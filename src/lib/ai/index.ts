@@ -75,10 +75,11 @@ function callProvider(
   providerId: ProviderId,
   systemPrompt: string,
   userMessage: string,
-  signal: AbortSignal
+  signal: AbortSignal,
+  attachment?: { base64: string; mimeType: string; filename: string }
 ) {
   const provider = PROVIDERS[providerId];
-  return callOpenAICompatible({ systemPrompt, userMessage, provider, signal });
+  return callOpenAICompatible({ systemPrompt, userMessage, provider, signal, attachment });
 }
 
 // ---------------------------------------------------------------------------
@@ -189,7 +190,7 @@ export async function runAICall<T = unknown>(
       }, provider.timeoutMs);
 
       // Make the AI call with timeout signal
-      const response = await callProvider(providerId, systemPrompt, userMessage, controller.signal);
+      const response = await callProvider(providerId, systemPrompt, userMessage, controller.signal, payload.attachment);
       clearTimeout(timeoutId);
       
       // Parse JSON from response

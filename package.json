@@ -35,6 +35,9 @@
     "react-day-picker": "^8.10.1",
     "react-dom": "19.2.8",
     "react-hook-form": "^7.85.0",
+    "react-markdown": "^10.1.0",
+    "rehype-katex": "^7.0.1",
+    "remark-math": "^6.0.0",
     "resend": "^6.18.1",
     "tailwind-merge": "^3.6.0",
     "zod": "^4.4.3"

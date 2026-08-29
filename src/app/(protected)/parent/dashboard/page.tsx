@@ -1,7 +1,20 @@
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { Activity, BookOpen, CheckCircle2, RotateCcw, Clock, ShieldCheck } from "lucide-react";
+import {
+  Activity,
+  BookOpen,
+  CheckCircle2,
+  RotateCcw,
+  Clock,
+  ShieldCheck,
+} from "lucide-react";
 import StaggerChildren from "@/components/motion/stagger-children";
+import { StatChip } from "@/components/dashboard/stat-chip";
+import { SessionCard } from "@/components/dashboard/session-card";
+import {
+  ActivitySidebar,
+  type ActivityItem,
+} from "@/components/dashboard/activity-sidebar";
 
 export const metadata = {
   title: "Parent Dashboard | Zorvai",
@@ -29,7 +42,7 @@ export default async function ParentDashboardPage() {
   if (!link) {
     return (
       <div className="flex flex-col gap-12 h-full max-w-5xl mx-auto pb-16 pt-8 px-4">
-        <div className="w-full rounded-2xl border border-[var(--color-border)] bg-surface p-8 sm:p-12 flex flex-col items-center justify-center text-center shadow-[var(--shadow-sm)]">
+        <div className="w-full rounded-[var(--radius-xl)] border border-[var(--color-border)] bg-surface p-8 sm:p-12 flex flex-col items-center justify-center text-center shadow-[var(--shadow-sm)]">
           <div className="w-16 h-16 rounded-full bg-[var(--color-primary)]/10 flex items-center justify-center mb-5">
             <Activity className="w-8 h-8 text-[var(--color-primary)]" />
           </div>
@@ -37,7 +50,8 @@ export default async function ParentDashboardPage() {
             No linked student
           </h3>
           <p className="text-[var(--color-text-muted)] text-[var(--text-body)] max-w-sm font-sans leading-relaxed">
-            Something went wrong — your account isn&apos;t linked to a student yet.
+            Something went wrong — your account isn&apos;t linked to a
+            student yet.
           </p>
         </div>
       </div>
@@ -64,10 +78,11 @@ export default async function ParentDashboardPage() {
 
   const parentName = parentRow?.name || "Parent";
 
-  // ── Fetch session history (last 20 sessions, with topic titles and results) ──
+  // ── Fetch session history (last 10 for activity sidebar) ──
   const { data: sessions } = await admin
     .from("sessions")
-    .select(`
+    .select(
+      `
       id,
       phase,
       status,
@@ -75,10 +90,11 @@ export default async function ParentDashboardPage() {
       ended_at,
       plan_topics (title),
       session_results (passed)
-    `)
+    `
+    )
     .eq("student_id", studentId)
     .order("started_at", { ascending: false })
-    .limit(20);
+    .limit(10);
 
   const sessionList = (sessions || []).map((s) => {
     const topicTitle = Array.isArray(s.plan_topics)
@@ -98,8 +114,9 @@ export default async function ParentDashboardPage() {
     };
   });
 
-  const hasSessions = sessionList.length > 0;
-  const completedSessions = sessionList.filter(s => s.status === "completed");
+  const completedSessions = sessionList.filter(
+    (s) => s.status === "completed"
+  );
 
   // ── Fetch topic mastery status (from active plan) ──
   const { data: activePlan } = await admin
@@ -110,28 +127,37 @@ export default async function ParentDashboardPage() {
     .limit(1)
     .maybeSingle();
 
-  let topicStatuses: Array<{ title: string; status: string; day: number }> = [];
+  let topicStatuses: Array<{
+    title: string;
+    description: string | null;
+    status: string;
+    day: number;
+  }> = [];
 
   if (activePlan) {
     const { data: topics } = await admin
       .from("plan_topics")
-      .select("title, status, day")
+      .select("title, description, status, day")
       .eq("plan_id", activePlan.id)
       .order("sort_order", { ascending: true });
 
     topicStatuses = (topics || []).map((t) => ({
       title: t.title,
+      description: t.description,
       status: t.status,
       day: t.day,
     }));
   }
 
-  const masteredCount = topicStatuses.filter(t => t.status === "mastered").length;
-  const requeuedCount = topicStatuses.filter(t => t.status === "re-queued").length;
-  const pendingCount = topicStatuses.filter(t => t.status === "pending").length;
+  const masteredCount = topicStatuses.filter(
+    (t) => t.status === "mastered"
+  ).length;
+  const pendingCount = topicStatuses.filter(
+    (t) => t.status === "pending"
+  ).length;
   const totalTopics = topicStatuses.length;
 
-  // ── Fetch guarantee tracking (manual/qualitative v1) ──
+  // ── Fetch guarantee tracking ──
   const { data: guarantee } = await admin
     .from("guarantee_tracking")
     .select("status, agreed_sessions, baseline_score, follow_up_score")
@@ -140,7 +166,6 @@ export default async function ParentDashboardPage() {
     .limit(1)
     .maybeSingle();
 
-  // Determine guarantee status as plain language
   let guaranteeLabel: string;
   let guaranteeColor: string;
   if (!guarantee) {
@@ -160,11 +185,70 @@ export default async function ParentDashboardPage() {
     guaranteeColor = "var(--color-text-muted)";
   }
 
+  // ── Fetch recent check-ins (dates only — NEVER expose mood_text) ──
+  const { data: recentCheckins } = await admin
+    .from("checkins")
+    .select("id, created_at")
+    .eq("student_id", studentId)
+    .order("created_at", { ascending: false })
+    .limit(5);
+
+  // ── Build activity items for sidebar ──
+  const activityItems: ActivityItem[] = [];
+
+  // Add completed sessions as activity
+  for (const s of completedSessions.slice(0, 5)) {
+    activityItems.push({
+      id: `session-${s.id}`,
+      type: "session",
+      title: s.topic,
+      description:
+        s.passed === true
+          ? "Completed — Passed"
+          : s.passed === false
+            ? "Completed — Needs Review"
+            : "Completed",
+      date: new Date(s.startedAt).toLocaleDateString("en-US", {
+        weekday: "short",
+        month: "short",
+        day: "numeric",
+      }),
+      accentColor:
+        s.passed === true
+          ? "var(--color-success)"
+          : s.passed === false
+            ? "var(--color-warning)"
+            : "var(--color-primary)",
+    });
+  }
+
+  // Add check-ins as activity
+  for (const c of recentCheckins || []) {
+    activityItems.push({
+      id: `checkin-${c.id}`,
+      type: "checkin",
+      title: "Daily Check-in",
+      description: "Completed daily check-in",
+      date: new Date(c.created_at).toLocaleDateString("en-US", {
+        weekday: "short",
+        month: "short",
+        day: "numeric",
+      }),
+      accentColor: "var(--color-primary)",
+    });
+  }
+
+  // Sort by date descending, take most recent 8
+  activityItems.sort(
+    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+  );
+  const displayActivities = activityItems.slice(0, 8);
+
   return (
-    <div className="flex flex-col gap-8 h-full max-w-5xl mx-auto pb-16 pt-8 px-4">
-      {/* Header */}
+    <div className="max-w-7xl mx-auto px-4 md:px-8 py-8 pb-16">
+      {/* ── Header ── */}
       <StaggerChildren delay={0}>
-        <header>
+        <header className="mb-6">
           <h1 className="text-3xl md:text-4xl font-display text-[var(--color-text)] tracking-tight">
             Welcome, {parentName}
           </h1>
@@ -174,246 +258,114 @@ export default async function ParentDashboardPage() {
         </header>
       </StaggerChildren>
 
-      {/* Privacy Notice — PROMINENT, before any data */}
-      <StaggerChildren delay={0.04}>
-        <div className="flex items-start gap-3 rounded-[var(--radius-lg)] border border-[var(--color-primary)]/20 bg-[var(--color-primary)]/5 p-4">
-          <ShieldCheck className="w-5 h-5 text-[var(--color-primary)] shrink-0 mt-0.5" />
-          <p className="text-sm text-[var(--color-text)] font-sans leading-relaxed">
-            <strong className="font-semibold">Your student&apos;s privacy is protected.</strong> This dashboard shows study progress and mastery status only. Check-in reflections and personal content are private to {studentName} and are never shared.
-          </p>
-        </div>
-      </StaggerChildren>
-
-      {/* Stats Row — 2x2 on mobile, 4-col on desktop */}
-      <StaggerChildren delay={0.08}>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          {/* Sessions Completed */}
-          <div className="bg-surface border border-[var(--color-border)] rounded-[var(--radius-xl)] shadow-[var(--shadow-sm)] p-5 flex flex-col transition-all duration-200 hover:shadow-[var(--shadow-md)] hover:border-[var(--color-border-focus)]">
-            <div className="flex items-center gap-2 text-[var(--color-text-muted)] mb-2">
-              <Activity className="w-4 h-4" />
-              <span className="font-sans text-xs font-medium uppercase tracking-wider">Sessions</span>
-            </div>
-            <p className="text-3xl font-display font-semibold text-[var(--color-text)]">
-              {completedSessions.length}
-            </p>
-            <p className="text-xs text-[var(--color-text-muted)] font-sans mt-1">completed</p>
-          </div>
-
-          {/* Topics Mastered */}
-          <div className="bg-surface border border-[var(--color-border)] rounded-[var(--radius-xl)] shadow-[var(--shadow-sm)] p-5 flex flex-col transition-all duration-200 hover:shadow-[var(--shadow-md)] hover:border-[var(--color-border-focus)]">
-            <div className="flex items-center gap-2 text-[var(--color-success)] mb-2">
-              <CheckCircle2 className="w-4 h-4" />
-              <span className="font-sans text-xs font-medium uppercase tracking-wider">Mastered</span>
-            </div>
-            <p className="text-3xl font-display font-semibold text-[var(--color-text)]">
-              {masteredCount}<span className="text-lg text-[var(--color-text-muted)] font-normal"> / {totalTopics}</span>
-            </p>
-            <p className="text-xs text-[var(--color-text-muted)] font-sans mt-1">topics understood</p>
-          </div>
-
-          {/* Topics Re-queued */}
-          <div className="bg-surface border border-[var(--color-border)] rounded-[var(--radius-xl)] shadow-[var(--shadow-sm)] p-5 flex flex-col transition-all duration-200 hover:shadow-[var(--shadow-md)] hover:border-[var(--color-border-focus)]">
-            <div className="flex items-center gap-2 text-[var(--color-warning)] mb-2">
-              <RotateCcw className="w-4 h-4" />
-              <span className="font-sans text-xs font-medium uppercase tracking-wider">Re-queued</span>
-            </div>
-            <p className="text-3xl font-display font-semibold text-[var(--color-text)]">
-              {requeuedCount}
-            </p>
-            <p className="text-xs text-[var(--color-text-muted)] font-sans mt-1">topics need more practice</p>
-          </div>
-
-          {/* Guarantee Status */}
-          <div className="bg-surface border border-[var(--color-border)] rounded-[var(--radius-xl)] shadow-[var(--shadow-sm)] p-5 flex flex-col transition-all duration-200 hover:shadow-[var(--shadow-md)] hover:border-[var(--color-border-focus)]">
-            <div className="flex items-center gap-2 text-[var(--color-text-muted)] mb-2">
-              <BookOpen className="w-4 h-4" />
-              <span className="font-sans text-xs font-medium uppercase tracking-wider">Guarantee</span>
-            </div>
-            <p className="text-lg font-display font-semibold" style={{ color: guaranteeColor }}>
-              {guaranteeLabel}
-            </p>
-            {guarantee?.agreed_sessions && (
-              <p className="text-xs text-[var(--color-text-muted)] font-sans mt-1">
-                {guarantee.agreed_sessions} sessions agreed
+      {/* ── Two-Column Layout ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* ══════════ Main Column (2/3) ══════════ */}
+        <div className="lg:col-span-2 flex flex-col gap-6">
+          {/* Privacy Notice */}
+          <StaggerChildren delay={0.04}>
+            <div className="flex items-start gap-3 rounded-[var(--radius-lg)] border border-[var(--color-primary)]/20 bg-[var(--color-primary)]/5 p-4">
+              <ShieldCheck className="w-5 h-5 text-[var(--color-primary)] shrink-0 mt-0.5" />
+              <p className="text-sm text-[var(--color-text)] font-sans leading-relaxed">
+                <strong className="font-semibold">
+                  Your student&apos;s privacy is protected.
+                </strong>{" "}
+                This dashboard shows study progress and mastery status
+                only. Check-in reflections and personal content are
+                private to {studentName} and are never shared.
               </p>
-            )}
-          </div>
-        </div>
-      </StaggerChildren>
+            </div>
+          </StaggerChildren>
 
-      {/* Topic Mastery Status */}
-      <StaggerChildren delay={0.12}>
-        {topicStatuses.length > 0 ? (
-          <section className="bg-surface border border-[var(--color-border)] rounded-[var(--radius-xl)] shadow-[var(--shadow-sm)] overflow-hidden">
-            <div className="p-6 pb-4 border-b border-[var(--color-border)]">
-              <h2 className="text-lg font-display font-medium text-[var(--color-text)]">
-                Topic Mastery
+          {/* Stats Row */}
+          <StaggerChildren delay={0.08}>
+            <div className="flex flex-wrap gap-3">
+              <StatChip
+                value={totalTopics}
+                label="Total"
+                colorClass="text-[var(--color-text)]"
+                borderColorClass="border-[var(--color-primary)]/30"
+              />
+              <StatChip
+                value={masteredCount}
+                label="Mastered"
+                colorClass="text-[var(--color-success)]"
+                borderColorClass="border-[var(--color-success)]/30"
+              />
+              <StatChip
+                value={pendingCount}
+                label="Upcoming"
+                colorClass="text-[var(--color-primary)]"
+                borderColorClass="border-[var(--color-primary)]/20"
+              />
+              {/* Guarantee chip */}
+              <div className="flex items-center gap-2 px-4 py-2.5 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-surface shadow-[var(--shadow-xs)]">
+                <ShieldCheck
+                  className="w-4 h-4"
+                  style={{ color: guaranteeColor }}
+                />
+                <span
+                  className="text-sm font-sans font-medium"
+                  style={{ color: guaranteeColor }}
+                >
+                  {guaranteeLabel}
+                </span>
+              </div>
+            </div>
+          </StaggerChildren>
+
+          {/* Topic Mastery Card List — "Study Plan" */}
+          <StaggerChildren delay={0.12}>
+            <div>
+              <h2 className="text-lg font-display font-medium text-[var(--color-text)] mb-4">
+                {studentName}&apos;s Study Plan
               </h2>
-              <p className="text-sm text-[var(--color-text-muted)] font-sans mt-1">
-                {studentName}&apos;s current study plan — {pendingCount} remaining, {masteredCount} mastered, {requeuedCount} reviewing
-              </p>
-            </div>
-            <div className="divide-y divide-[var(--color-border)]">
-              {topicStatuses.map((topic, i) => (
-                <div key={i} className="flex items-center gap-4 px-6 py-3.5 hover:bg-[var(--color-bg)]/50 transition-colors">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
-                    topic.status === "mastered"
-                      ? "bg-[var(--color-success)]/10 text-[var(--color-success)]"
-                      : topic.status === "re-queued"
-                      ? "bg-[var(--color-warning)]/10 text-[var(--color-warning)]"
-                      : "bg-[var(--color-primary)]/10 text-[var(--color-primary)]"
-                  }`}>
-                    {topic.status === "mastered" ? (
-                      <CheckCircle2 className="w-4 h-4" />
-                    ) : topic.status === "re-queued" ? (
-                      <RotateCcw className="w-4 h-4" />
-                    ) : (
-                      <Clock className="w-4 h-4" />
-                    )}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-sans text-sm text-[var(--color-text)] truncate font-medium">
-                      {topic.title}
-                    </p>
-                    <p className="font-sans text-xs text-[var(--color-text-muted)]">
-                      Day {topic.day}
-                    </p>
-                  </div>
-                  <span className={`text-xs font-medium font-sans px-2.5 py-1 rounded-full shrink-0 ${
-                    topic.status === "mastered"
-                      ? "bg-[var(--color-success)]/10 text-[var(--color-success)]"
-                      : topic.status === "re-queued"
-                      ? "bg-[var(--color-warning)]/10 text-[var(--color-warning)]"
-                      : "bg-[var(--color-primary)]/10 text-[var(--color-primary)]"
-                  }`}>
-                    {topic.status === "mastered" ? "Understood" : topic.status === "re-queued" ? "Reviewing" : "Upcoming"}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </section>
-        ) : (
-          <section className="bg-surface border border-[var(--color-border)] rounded-[var(--radius-xl)] shadow-[var(--shadow-sm)] p-8 flex flex-col items-center text-center">
-            <div className="w-14 h-14 rounded-full bg-[var(--color-primary)]/10 flex items-center justify-center mb-4">
-              <BookOpen className="w-7 h-7 text-[var(--color-primary)]" />
-            </div>
-            <h3 className="font-display font-medium text-[var(--color-text)] text-lg mb-1">No study plan yet</h3>
-            <p className="text-[var(--color-text-muted)] text-sm font-sans max-w-sm">
-              {studentName} hasn&apos;t completed onboarding yet. Topics will appear here once their study plan is generated.
-            </p>
-          </section>
-        )}
-      </StaggerChildren>
 
-      {/* Session History */}
-      <StaggerChildren delay={0.16}>
-        {hasSessions ? (
-          <section className="bg-surface border border-[var(--color-border)] rounded-[var(--radius-xl)] shadow-[var(--shadow-sm)] overflow-hidden">
-            <div className="p-6 pb-4 border-b border-[var(--color-border)]">
-              <h2 className="text-lg font-display font-medium text-[var(--color-text)]">
-                Session History
-              </h2>
-              <p className="text-sm text-[var(--color-text-muted)] font-sans mt-1">
-                Recent study sessions
-              </p>
-            </div>
-
-            {/* Desktop table — hidden on mobile */}
-            <div className="hidden md:block overflow-x-auto">
-              <table className="w-full text-left font-sans text-sm">
-                <thead className="bg-[var(--color-bg)] text-[var(--color-text-muted)] border-b border-[var(--color-border)] text-[11px] uppercase tracking-widest">
-                  <tr>
-                    <th className="px-6 py-3.5 font-medium">Topic</th>
-                    <th className="px-6 py-3.5 font-medium">Status</th>
-                    <th className="px-6 py-3.5 font-medium">Result</th>
-                    <th className="px-6 py-3.5 font-medium">Date</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[var(--color-border)]">
-                  {sessionList.map((s) => (
-                    <tr key={s.id} className="hover:bg-[var(--color-bg)]/50 transition-colors">
-                      <td className="px-6 py-3.5 text-[var(--color-text)] font-medium max-w-[200px] truncate">
-                        {s.topic}
-                      </td>
-                      <td className="px-6 py-3.5">
-                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-                          s.status === "completed"
-                            ? "bg-[var(--color-success)]/10 text-[var(--color-success)]"
-                            : s.status === "active"
-                            ? "bg-[var(--color-accent)]/10 text-[var(--color-accent)]"
-                            : "bg-[var(--color-text-muted)]/10 text-[var(--color-text-muted)]"
-                        }`}>
-                          {s.status === "completed" ? "Completed" : s.status === "active" ? "In Progress" : "Abandoned"}
-                        </span>
-                      </td>
-                      <td className="px-6 py-3.5 text-[var(--color-text-muted)]">
-                        {s.passed === true ? (
-                          <span className="text-[var(--color-success)] font-medium">Passed</span>
-                        ) : s.passed === false ? (
-                          <span className="text-[var(--color-warning)] font-medium">Needs Review</span>
-                        ) : (
-                          <span>&mdash;</span>
-                        )}
-                      </td>
-                      <td className="px-6 py-3.5 text-[var(--color-text-muted)] whitespace-nowrap">
-                        {new Date(s.startedAt).toLocaleDateString("en-US", {
-                          month: "short",
-                          day: "numeric",
-                        })}
-                      </td>
-                    </tr>
+              {topicStatuses.length > 0 ? (
+                <div className="flex flex-col gap-3">
+                  {topicStatuses.map((topic, i) => (
+                    <SessionCard
+                      key={`${topic.title}-${i}`}
+                      title={topic.title}
+                      description={topic.description || undefined}
+                      status={
+                        topic.status as
+                          | "mastered"
+                          | "re-queued"
+                          | "pending"
+                      }
+                      day={topic.day}
+                      index={i}
+                    />
                   ))}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Mobile cards — hidden on desktop */}
-            <div className="md:hidden divide-y divide-[var(--color-border)]">
-              {sessionList.map((s) => (
-                <div key={s.id} className="p-4 flex flex-col gap-2">
-                  <div className="flex items-center justify-between">
-                    <p className="font-sans text-sm text-[var(--color-text)] font-medium truncate max-w-[200px]">
-                      {s.topic}
-                    </p>
-                    <span className="font-sans text-xs text-[var(--color-text-muted)] whitespace-nowrap ml-2">
-                      {new Date(s.startedAt).toLocaleDateString("en-US", {
-                        month: "short",
-                        day: "numeric",
-                      })}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-                      s.status === "completed"
-                        ? "bg-[var(--color-success)]/10 text-[var(--color-success)]"
-                        : s.status === "active"
-                        ? "bg-[var(--color-accent)]/10 text-[var(--color-accent)]"
-                        : "bg-[var(--color-text-muted)]/10 text-[var(--color-text-muted)]"
-                    }`}>
-                      {s.status === "completed" ? "Completed" : s.status === "active" ? "In Progress" : "Abandoned"}
-                    </span>
-                    {s.passed === true ? (
-                      <span className="text-xs text-[var(--color-success)] font-medium">Passed</span>
-                    ) : s.passed === false ? (
-                      <span className="text-xs text-[var(--color-warning)] font-medium">Needs Review</span>
-                    ) : null}
-                  </div>
                 </div>
-              ))}
+              ) : (
+                <div className="rounded-[var(--radius-xl)] border border-[var(--color-border)] bg-surface p-8 flex flex-col items-center text-center shadow-[var(--shadow-sm)]">
+                  <div className="w-14 h-14 rounded-full bg-[var(--color-primary)]/10 flex items-center justify-center mb-4">
+                    <BookOpen className="w-7 h-7 text-[var(--color-primary)]" />
+                  </div>
+                  <h3 className="font-display font-medium text-[var(--color-text)] text-lg mb-1">
+                    No study plan yet
+                  </h3>
+                  <p className="text-[var(--color-text-muted)] text-sm font-sans max-w-sm">
+                    {studentName} hasn&apos;t completed onboarding yet.
+                    Topics will appear here once their study plan is
+                    generated.
+                  </p>
+                </div>
+              )}
             </div>
-          </section>
-        ) : (
-          <section className="bg-surface border border-[var(--color-border)] rounded-[var(--radius-xl)] shadow-[var(--shadow-sm)] p-8 flex flex-col items-center text-center">
-            <div className="w-14 h-14 rounded-full bg-[var(--color-primary)]/10 flex items-center justify-center mb-4">
-              <Activity className="w-7 h-7 text-[var(--color-primary)]" />
-            </div>
-            <h3 className="font-display font-medium text-[var(--color-text)] text-lg mb-1">No sessions yet</h3>
-            <p className="text-[var(--color-text-muted)] text-sm font-sans max-w-sm">
-              {studentName} hasn&apos;t started studying yet. Sessions will appear here once they begin.
-            </p>
-          </section>
-        )}
-      </StaggerChildren>
+          </StaggerChildren>
+        </div>
+
+        {/* ══════════ Sidebar (1/3) ══════════ */}
+        <div className="lg:col-span-1">
+          <ActivitySidebar
+            items={displayActivities}
+            studentName={studentName}
+          />
+        </div>
+      </div>
     </div>
   );
 }
