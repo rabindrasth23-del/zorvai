@@ -1,10 +1,10 @@
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { BookOpen, CalendarDays } from "lucide-react";
+import { CalendarDays } from "lucide-react";
 import {
   LinkNotificationBanner,
 } from "@/components/dashboard/parent-link-widgets";
-import { TopicFlowCard } from "@/components/dashboard/topic-flow-card";
+import { StudyPlanClient } from "@/components/dashboard/study-plan-client";
 import {
   ActivitySidebar,
   type ActivityItem,
@@ -106,11 +106,6 @@ export default async function DashboardPage({
   const upcomingCount = topicStatuses.filter(
     (t) => t.status === "pending" || t.status === "re-queued"
   ).length;
-
-  // First pending/re-queued topic = current topic (gets visual emphasis)
-  const currentTopicIndex = topicStatuses.findIndex(
-    (t) => t.status === "pending" || t.status === "re-queued"
-  );
 
   // ── Recent sessions (for activity sidebar) ──
   const { data: recentSessions } = await admin
@@ -246,41 +241,8 @@ export default async function DashboardPage({
             </div>
           </StaggerChildren>
 
-          {/* Topic flow — connected cards */}
-          {topicStatuses.length > 0 ? (
-            <div className="flex flex-col">
-              {topicStatuses.map((topic, i) => {
-                const displayStatus =
-                  topic.status === "mastered"
-                    ? ("mastered" as const)
-                    : ("upcoming" as const);
-                return (
-                  <TopicFlowCard
-                    key={`${topic.title}-${i}`}
-                    title={topic.title}
-                    description={topic.description || undefined}
-                    status={displayStatus}
-                    isCurrent={i === currentTopicIndex}
-                    isLast={i === topicStatuses.length - 1}
-                    index={i}
-                  />
-                );
-              })}
-            </div>
-          ) : (
-            <div className="rounded-[var(--radius-xl)] border border-[var(--color-border)] bg-surface p-8 flex flex-col items-center text-center shadow-[var(--shadow-sm)]">
-              <div className="w-14 h-14 rounded-full bg-[var(--color-primary)]/10 flex items-center justify-center mb-4">
-                <BookOpen className="w-7 h-7 text-[var(--color-primary)]" />
-              </div>
-              <h3 className="font-display font-medium text-[var(--color-text)] text-lg mb-1">
-                No study plan yet
-              </h3>
-              <p className="text-[var(--color-text-muted)] text-sm font-sans max-w-sm">
-                Complete your onboarding to generate a personalized
-                study plan.
-              </p>
-            </div>
-          )}
+          {/* Topic flow — search + icon rail + connected cards */}
+          <StudyPlanClient topics={topicStatuses} />
         </div>
 
         {/* ═══ Sidebar (1/3) ═══ */}

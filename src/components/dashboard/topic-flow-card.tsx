@@ -1,17 +1,44 @@
 "use client";
 
 import { motion, useReducedMotion } from "motion/react";
-import { CheckCircle2, Clock, ArrowRight } from "lucide-react";
+import { CheckCircle2, Clock, RotateCcw, ArrowRight, Zap } from "lucide-react";
 import Link from "next/link";
 
 interface TopicFlowCardProps {
   title: string;
   description?: string;
-  status: "mastered" | "upcoming";
+  status: "mastered" | "upcoming" | "review";
   isCurrent: boolean;
   isLast: boolean;
   index: number;
 }
+
+const statusConfig = {
+  mastered: {
+    label: "Mastered",
+    icon: CheckCircle2,
+    pillBg: "bg-[var(--color-success)]/10",
+    pillText: "text-[var(--color-success)]",
+    pillBorder: "border-[var(--color-success)]/20",
+    dotColor: "bg-[var(--color-success)]",
+  },
+  upcoming: {
+    label: "Upcoming",
+    icon: Clock,
+    pillBg: "bg-[var(--color-warning)]/10",
+    pillText: "text-[var(--color-warning)]",
+    pillBorder: "border-[var(--color-warning)]/20",
+    dotColor: "bg-[var(--color-border)]",
+  },
+  review: {
+    label: "Review Again",
+    icon: RotateCcw,
+    pillBg: "bg-[var(--color-accent)]/10",
+    pillText: "text-[var(--color-accent)]",
+    pillBorder: "border-[var(--color-accent)]/20",
+    dotColor: "bg-[var(--color-accent)]",
+  },
+};
 
 export function TopicFlowCard({
   title,
@@ -22,7 +49,8 @@ export function TopicFlowCard({
   index,
 }: TopicFlowCardProps) {
   const shouldReduceMotion = useReducedMotion();
-  const isMastered = status === "mastered";
+  const config = statusConfig[status];
+  const StatusIcon = config.icon;
 
   return (
     <motion.div
@@ -36,19 +64,15 @@ export function TopicFlowCard({
         delay: 0.1 + index * 0.04,
       }}
     >
-      {/* ── Timeline line + dot ── */}
+      {/* ── Timeline dot + dashed connector ── */}
       <div className="flex flex-col items-center shrink-0 w-6">
-        {/* Dot marker */}
         <div
           className={`w-3 h-3 rounded-full shrink-0 mt-6 z-10 ${
             isCurrent
               ? "bg-[var(--color-accent)] ring-4 ring-[var(--color-accent)]/20"
-              : isMastered
-                ? "bg-[var(--color-success)]"
-                : "bg-[var(--color-border)]"
+              : config.dotColor
           }`}
         />
-        {/* Dashed connector */}
         {!isLast && (
           <div className="flex-1 w-0 border-l-2 border-dashed border-[var(--color-border)] mt-1" />
         )}
@@ -56,19 +80,26 @@ export function TopicFlowCard({
 
       {/* ── Card ── */}
       <div
-        className={`flex-1 rounded-[var(--radius-lg)] border p-5 mb-3 transition-all duration-200 ${
+        className={`relative flex-1 rounded-[var(--radius-lg)] border mb-3 transition-all duration-200 ${
           isCurrent
-            ? "bg-[var(--color-accent)]/6 border-[var(--color-accent)]/25 shadow-[var(--shadow-md)] ring-1 ring-[var(--color-accent)]/10"
-            : "bg-surface border-[var(--color-border)] shadow-[var(--shadow-xs)] hover:shadow-[var(--shadow-md)] hover:border-[var(--color-border-focus)]"
+            ? "bg-[var(--color-accent)]/6 border-[var(--color-accent)]/25 shadow-[var(--shadow-lg)] ring-1 ring-[var(--color-accent)]/10 p-6"
+            : "bg-surface border-[var(--color-border)] shadow-[var(--shadow-xs)] hover:shadow-[var(--shadow-md)] hover:border-[var(--color-border-focus)] p-5"
         }`}
       >
+        {/* ⚡ Active badge for current topic */}
+        {isCurrent && (
+          <div className="absolute -top-2 -right-2 w-8 h-8 rounded-full bg-[var(--color-accent)] flex items-center justify-center shadow-[var(--shadow-md)] z-10">
+            <Zap className="w-4 h-4 text-white" />
+          </div>
+        )}
+
         <div className="flex items-start justify-between gap-3">
           <div className="flex-1 min-w-0">
             <p
-              className={`font-sans text-base font-semibold mb-1 ${
+              className={`font-sans font-semibold mb-1 ${
                 isCurrent
-                  ? "text-[var(--color-accent)]"
-                  : "text-[var(--color-text)]"
+                  ? "text-[var(--color-accent)] text-lg"
+                  : "text-[var(--color-text)] text-base"
               }`}
             >
               {title}
@@ -80,32 +111,45 @@ export function TopicFlowCard({
             )}
           </div>
 
-          {/* Status pill */}
+          {/* Status pill — 3 distinct states */}
           <span
-            className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-sans font-medium shrink-0 border ${
-              isMastered
-                ? "bg-[var(--color-success)]/10 text-[var(--color-success)] border-[var(--color-success)]/20"
-                : "bg-[var(--color-warning)]/10 text-[var(--color-warning)] border-[var(--color-warning)]/20"
-            }`}
+            className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-sans font-medium shrink-0 border ${config.pillBg} ${config.pillText} ${config.pillBorder}`}
           >
-            {isMastered ? (
-              <CheckCircle2 className="w-3.5 h-3.5" />
-            ) : (
-              <Clock className="w-3.5 h-3.5" />
-            )}
-            {isMastered ? "Mastered" : "Upcoming"}
+            <StatusIcon className="w-3.5 h-3.5" />
+            {config.label}
           </span>
         </div>
 
-        {/* CTA for current/next topic */}
+        {/* Pulsing CTA for current topic */}
         {isCurrent && (
-          <Link
-            href="/checkin"
-            className="inline-flex items-center gap-2 mt-3 px-4 py-2 rounded-full bg-[var(--color-accent)] text-white text-sm font-sans font-medium hover:opacity-90 transition-opacity cursor-pointer shadow-[var(--shadow-sm)]"
+          <motion.div
+            className="inline-block mt-4"
+            style={{ borderRadius: "9999px" }}
+            animate={
+              shouldReduceMotion
+                ? {}
+                : {
+                    boxShadow: [
+                      "0 0 0 0 rgba(255,122,69,0)",
+                      "0 0 0 8px rgba(255,122,69,0.15)",
+                      "0 0 0 0 rgba(255,122,69,0)",
+                    ],
+                  }
+            }
+            transition={
+              shouldReduceMotion
+                ? {}
+                : { duration: 2.5, repeat: Infinity, ease: "easeInOut" }
+            }
           >
-            Start Session
-            <ArrowRight className="w-3.5 h-3.5" />
-          </Link>
+            <Link
+              href="/checkin"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[var(--color-accent)] text-white text-sm font-sans font-semibold hover:opacity-90 transition-opacity cursor-pointer shadow-[var(--shadow-md)]"
+            >
+              Start Session
+              <ArrowRight className="w-4 h-4" />
+            </Link>
+          </motion.div>
         )}
       </div>
     </motion.div>
