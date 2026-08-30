@@ -288,14 +288,28 @@ export default function WaitlistPage() {
                 lineHeight:1.1, letterSpacing:"-0.03em",
                 animation:"scaleIn 0.4s cubic-bezier(.16,1,.3,1) both",
               }}>
-                You&apos;re in! 🎉
+                {signup?.alreadyJoined ? "Welcome back! 👋" : "You're in! 🎉"}
               </h1>
               <p style={{
                 marginTop:16, color:"#7a7672", fontSize:16, textAlign:"center",
                 animation:"fadeUp 0.4s cubic-bezier(.16,1,.3,1) 0.1s both",
               }}>
-                Position <span style={{ color:"#4ecdc4", fontWeight:700 }}>#{signup?.position}</span> on the waitlist
+                {signup?.alreadyJoined
+                  ? <>You&apos;re already on the waitlist at position <span style={{ color:"#4ecdc4", fontWeight:700 }}>#{signup?.position}</span></>
+                  : <>Position <span style={{ color:"#4ecdc4", fontWeight:700 }}>#{signup?.position}</span> on the waitlist</>}
               </p>
+              {/* Referral code display */}
+              {signup?.referralCode && (
+                <div style={{
+                  marginTop:12, display:"inline-flex", alignItems:"center", gap:8,
+                  padding:"6px 16px", borderRadius:10,
+                  background:"#141312", border:"1px solid #1f1e1c",
+                  animation:"fadeUp 0.4s cubic-bezier(.16,1,.3,1) 0.15s both",
+                }}>
+                  <span style={{ fontSize:11, color:"#4a4844" }}>Your code:</span>
+                  <span style={{ fontSize:14, fontWeight:700, color:"#f0ede8", fontFamily:"'Geist Mono', monospace", letterSpacing:"0.05em" }}>{signup.referralCode}</span>
+                </div>
+              )}
             </>
           )}
 
@@ -430,9 +444,23 @@ export default function WaitlistPage() {
                   </div>
                 )}
 
-                {/* Pay Now / Maybe Later */}
+                {/* Pricing + Pay Now / Maybe Later */}
                 {signup.discountPercent > 0 && (
                   <div style={{ marginBottom:20 }}>
+                    {/* Pricing display */}
+                    <div style={{
+                      display:"flex", alignItems:"baseline", justifyContent:"center", gap:10,
+                      marginBottom:16,
+                    }}>
+                      <span style={{ fontSize:14, color:"#4a4844", textDecoration:"line-through" }}>
+                        $29/mo
+                      </span>
+                      <span style={{ fontSize:32, fontWeight:800, color:"#f0ede8", fontVariantNumeric:"tabular-nums" }}>
+                        ${(29 * (1 - signup.discountPercent / 100)).toFixed(0)}
+                      </span>
+                      <span style={{ fontSize:14, color:"#4a4844" }}>/mo forever</span>
+                    </div>
+
                     <button onClick={async () => {
                       try {
                         const res = await fetch("/api/waitlist/payment/intent", {
@@ -458,7 +486,7 @@ export default function WaitlistPage() {
                     onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 8px 32px rgba(78,205,196,0.35)"; }}
                     onMouseLeave={(e) => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "0 4px 24px rgba(78,205,196,0.25)"; }}
                     >
-                      Pay now — lock {signup.discountPercent}% off forever
+                      💳 Pay now — lock ${(29 * (1 - signup.discountPercent / 100)).toFixed(0)}/mo forever
                     </button>
 
                     <div style={{ display:"flex", alignItems:"center", justifyContent:"center", gap:6, marginTop:12 }}>
@@ -470,7 +498,7 @@ export default function WaitlistPage() {
                       </span>
                     </div>
 
-                    <button onClick={() => {/* just stay on success screen */}} style={{
+                    <button onClick={() => {/* stay on success screen */}} style={{
                       width:"100%", marginTop:12, padding:"10px", borderRadius:10,
                       border:"none", background:"transparent", color:"#3a3835",
                       fontSize:12, cursor:"pointer", fontFamily:"'Inter',sans-serif",
@@ -491,7 +519,7 @@ export default function WaitlistPage() {
                     <button onClick={()=>{
                       if(!signup) return;
                       const msg = encodeURIComponent(`I just joined the Zorvai waitlist — an AI tutor that actually checks understanding.\n\n${stats?.spotsLeft ? `${stats.spotsLeft} founding spots left at ${stats?.discountPercent}% off.` : ""}\n\nJoin: https://zorvai.ca/?ref=${signup.referralCode}`);
-                      window.open(`https://wa.me/?text=${msg}`, "_blank");
+                      window.open(`https://wa.me/9779763575615?text=${msg}`, "_blank");
                     }} style={{
                       flex:1, padding:"12px 0", borderRadius:12, border:"1px solid #1a1918",
                       background:"#141312", color:"#25d366", fontSize:13, fontWeight:600,

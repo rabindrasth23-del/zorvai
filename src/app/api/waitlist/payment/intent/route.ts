@@ -8,9 +8,9 @@ function getStripe() {
 }
 
 const PLANS: Record<string, { amount: number; currency: string; label: string }> = {
-  student_solo_monthly: { amount: 1999, currency: "usd", label: "Student Solo — Monthly" },
-  family_monthly: { amount: 3999, currency: "usd", label: "Family Plan — Monthly" },
-  family_annual: { amount: 29900, currency: "usd", label: "Family Plan — Annual" },
+  student_solo_monthly: { amount: 2900, currency: "usd", label: "Student Solo — Monthly" },
+  family_monthly: { amount: 4900, currency: "usd", label: "Family Plan — Monthly" },
+  family_annual: { amount: 39900, currency: "usd", label: "Family Plan — Annual" },
 };
 
 export async function POST(request: Request) {
@@ -63,11 +63,25 @@ export async function POST(request: Request) {
         .eq("id", signup.id);
     }
 
-    // Create payment intent
-    const paymentIntent = await stripe.paymentIntents.create({
-      amount: finalAmount,
-      currency: plan.currency,
+    // Create Stripe Checkout Session (redirect-based — works everywhere)
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://zorvai.vercel.app";
+
+    const session = await stripe.checkout.sessions.create({
       customer: customerId,
+      mode: "payment",
+      line_items: [
+        {
+          price_data: {
+            currency: plan.currency,
+            unit_amount: finalAmount,
+            product_data: {
+              name: plan.label,
+              description: `Zorvai Founding Member — ${signup.discount_percent}% lifetime discount`,
+            },
+          },
+          quantity: 1,
+        },
+      ],
       metadata: {
         waitlistId: signup.id,
         planId,
@@ -75,13 +89,13 @@ export async function POST(request: Request) {
         discountPercent: String(signup.discount_percent),
         lifetimeDiscount: String(signup.lifetime_discount),
       },
-      description: `${plan.label} — Zorvai Founding Member (${signup.discount_percent}% off)`,
-      receipt_email: signup.email,
+      success_url: `${appUrl}/waitlist?paid=true&email=${encodeURIComponent(signup.email)}`,
+      cancel_url: `${appUrl}/waitlist?cancelled=true`,
     });
 
     return NextResponse.json({
       ok: true,
-      clientSecret: paymentIntent.client_secret,
+      checkoutUrl: session.url,
       amount: finalAmount,
       originalAmount: plan.amount,
       discountPercent: signup.discount_percent,
