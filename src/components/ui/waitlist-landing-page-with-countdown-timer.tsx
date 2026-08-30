@@ -285,19 +285,27 @@ export function WaitlistExperience() {
       <div className="fixed top-6 left-1/2 -translate-x-1/2 z-50">
         <div className="bg-black/50 backdrop-blur-xl border border-white/10 rounded-full px-5 py-2.5">
           <div className="flex items-center gap-1">
-            {navItems.map((item) => (
-              <button
-                key={item.id}
-                onClick={() => scrollTo(item.id)}
-                className={`text-sm px-3 py-1.5 rounded-full transition-all duration-200 ${
-                  activeNav === item.id
-                    ? "bg-white/10 text-white border border-white/20"
-                    : "text-white/50 hover:text-white/80"
-                }`}
-              >
-                {item.label}
-              </button>
-            ))}
+            {navItems.map((item) => {
+              const isWaitlist = item.id === "waitlist";
+              const isActive = activeNav === item.id;
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => scrollTo(item.id)}
+                  className={`text-sm px-3 py-1.5 rounded-full transition-all duration-200 ${
+                    isWaitlist
+                      ? isActive
+                        ? "bg-red-600 text-white border border-red-500/50 shadow-[0_0_12px_rgba(239,68,68,0.4)]"
+                        : "bg-red-600/80 text-white border border-red-500/30 shadow-[0_0_8px_rgba(239,68,68,0.25)] hover:shadow-[0_0_14px_rgba(239,68,68,0.4)] animate-[pulse_3s_ease-in-out_infinite]"
+                      : isActive
+                        ? "bg-white/10 text-white border border-white/20"
+                        : "text-white/50 hover:text-white/80"
+                  }`}
+                >
+                  {isWaitlist ? "⚡ Waitlist" : item.label}
+                </button>
+              );
+            })}
           </div>
         </div>
       </div>
