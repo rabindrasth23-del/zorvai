@@ -119,8 +119,17 @@ export default function WaitlistPage() {
         body: JSON.stringify({ name, email, countryCode: country, role, referredBy }),
       });
       const data = await res.json();
-      if (data.ok) { setSignup(data); setStep("success"); }
-    } catch {} finally { setFormLoading(false); }
+      if (data.ok) { 
+        setSignup(data); 
+        setStep("success"); 
+      } else {
+        alert(data.error || "Failed to join waitlist. Please try again.");
+      }
+    } catch (err) {
+      alert("Something went wrong checking the network. Please try again.");
+    } finally { 
+      setFormLoading(false); 
+    }
   };
 
   const handleCopy = () => {
@@ -263,9 +272,24 @@ export default function WaitlistPage() {
                 animation:"fadeUp 0.6s cubic-bezier(.16,1,.3,1) 0.15s both",
               }}>
                 Zorvai is an AI that teaches like a one-to-one tutor — it checks
-                real understanding before moving on. Not a chatbot. A tutor that
-                <span style={{ color:"#f0ede8", fontWeight:500 }}> actually makes scores go up, or you get your money back.</span>
+                real understanding before moving on.
               </p>
+
+              <div style={{
+                marginTop: 20,
+                padding: "12px 20px",
+                borderRadius: 12,
+                background: "rgba(251,191,36,0.1)",
+                border: "1px solid rgba(251,191,36,0.2)",
+                animation: "fadeUp 0.6s cubic-bezier(.16,1,.3,1) 0.2s both",
+                maxWidth: 440,
+                textAlign: "center"
+              }}>
+                <span style={{ color: "#fbbf24", fontWeight: 600, fontSize: 14 }}>
+                  🛡️ Our Iron-Clad Promise:<br/>
+                  If we can&apos;t improve your child&apos;s scores, your money will be back. 100% Guaranteed.
+                </span>
+              </div>
             </>
           ) : (
             <>
