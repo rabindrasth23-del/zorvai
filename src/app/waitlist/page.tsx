@@ -119,17 +119,8 @@ export default function WaitlistPage() {
         body: JSON.stringify({ name, email, countryCode: country, role, referredBy }),
       });
       const data = await res.json();
-      if (data.ok) { 
-        setSignup(data); 
-        setStep("success"); 
-      } else {
-        alert(data.error || "Failed to join waitlist. Please try again.");
-      }
-    } catch (err) {
-      alert("Something went wrong checking the network. Please try again.");
-    } finally { 
-      setFormLoading(false); 
-    }
+      if (data.ok) { setSignup(data); setStep("success"); }
+    } catch {} finally { setFormLoading(false); }
   };
 
   const handleCopy = () => {
@@ -272,22 +263,21 @@ export default function WaitlistPage() {
                 animation:"fadeUp 0.6s cubic-bezier(.16,1,.3,1) 0.15s both",
               }}>
                 Zorvai is an AI that teaches like a one-to-one tutor — it checks
-                real understanding before moving on.
+                real understanding before moving on. Not a chatbot. A real tutor.
               </p>
 
+              {/* ── Money-back guarantee badge ── */}
               <div style={{
-                marginTop: 20,
-                padding: "12px 20px",
-                borderRadius: 12,
-                background: "rgba(251,191,36,0.1)",
-                border: "1px solid rgba(251,191,36,0.2)",
-                animation: "fadeUp 0.6s cubic-bezier(.16,1,.3,1) 0.2s both",
-                maxWidth: 440,
-                textAlign: "center"
+                marginTop:20, display:"inline-flex", alignItems:"center", gap:10,
+                padding:"10px 22px", borderRadius:14,
+                background:"rgba(78,205,196,0.06)", border:"1px solid rgba(78,205,196,0.15)",
+                animation:"fadeUp 0.6s cubic-bezier(.16,1,.3,1) 0.18s both",
               }}>
-                <span style={{ color: "#fbbf24", fontWeight: 600, fontSize: 14 }}>
-                  🛡️ Our Iron-Clad Promise:<br/>
-                  If we can&apos;t improve your child&apos;s scores, your money will be back. 100% Guaranteed.
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4ecdc4" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                </svg>
+                <span style={{ fontSize:14, fontWeight:600, color:"#4ecdc4" }}>
+                  Scores go up — or full refund. No questions.
                 </span>
               </div>
             </>
