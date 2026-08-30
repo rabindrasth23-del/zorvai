@@ -68,8 +68,8 @@ function useCountdown(target: Date) {
 
 export function WaitlistExperience() {
   const mountRef = useRef<HTMLDivElement>(null);
-  const rendererRef = useRef<WebGLRenderer>();
-  const animationIdRef = useRef<number>();
+  const rendererRef = useRef<WebGLRenderer | null>(null);
+  const animationIdRef = useRef<number | null>(null);
 
   const [step, setStep] = useState<"form" | "success">("form");
   const [signup, setSignup] = useState<SignupData | null>(null);
