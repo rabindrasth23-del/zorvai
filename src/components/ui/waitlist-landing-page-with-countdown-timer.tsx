@@ -246,21 +246,21 @@ export function WaitlistExperience() {
       <div ref={mountRef} className="fixed inset-0 w-full h-full" style={{ zIndex: 0 }} />
 
       {/* ═══ STICKY NAV ═══ */}
-      <div className="fixed top-6 left-1/2 -translate-x-1/2 z-50">
-        <div className="bg-black/50 backdrop-blur-xl border border-white/10 rounded-full px-3 py-2">
-          <div className="flex items-center gap-2">
-            <button onClick={() => scrollTo("waitlist")} className="flex items-center gap-2 px-2 py-1 rounded-full hover:bg-white/5 transition-all group">
-              <div className="w-8 h-8 rounded-full overflow-hidden border-2 border-white/20 group-hover:border-white/40 transition-all shadow-[0_0_10px_rgba(78,205,196,0.2)]">
+      <div className="fixed top-3 sm:top-6 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-24px)] sm:w-auto max-w-[95vw]">
+        <div className="bg-black/60 backdrop-blur-xl border border-white/10 rounded-full px-2 sm:px-3 py-1.5 sm:py-2">
+          <div className="flex items-center gap-1 sm:gap-2 overflow-x-auto scrollbar-none">
+            <button onClick={() => scrollTo("waitlist")} className="flex items-center gap-1.5 sm:gap-2 px-1.5 sm:px-2 py-1 rounded-full hover:bg-white/5 transition-all group flex-shrink-0">
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full overflow-hidden border-2 border-white/20 group-hover:border-white/40 transition-all shadow-[0_0_10px_rgba(78,205,196,0.2)]">
                 <img src="/zorvai-logo.png" alt="Zorvai" className="w-full h-full object-cover" />
               </div>
-              <span className="text-white font-semibold text-sm tracking-tight hidden sm:block">Zorvai</span>
+              <span className="text-white font-semibold text-xs sm:text-sm tracking-tight hidden sm:block">Zorvai</span>
             </button>
-            <div className="w-px h-5 bg-white/10 mx-1" />
+            <div className="w-px h-4 sm:h-5 bg-white/10 mx-0.5 sm:mx-1 flex-shrink-0" />
             {navItems.map((item) => {
               const isWaitlist = item.id === "waitlist";
               const isActive = activeNav === item.id;
               return (
-                <button key={item.id} onClick={() => scrollTo(item.id)} className={`text-sm px-3 py-1.5 rounded-full transition-all duration-200 ${isWaitlist ? isActive ? "bg-red-600 text-white border border-red-500/50 shadow-[0_0_12px_rgba(239,68,68,0.4)]" : "bg-red-600/80 text-white border border-red-500/30 shadow-[0_0_8px_rgba(239,68,68,0.25)] hover:shadow-[0_0_14px_rgba(239,68,68,0.4)] animate-pulse" : isActive ? "bg-white/10 text-white border border-white/20" : "text-white/50 hover:text-white/80"}`}>
+                <button key={item.id} onClick={() => scrollTo(item.id)} className={`text-[11px] sm:text-sm px-2 sm:px-3 py-1 sm:py-1.5 rounded-full transition-all duration-200 flex-shrink-0 whitespace-nowrap ${isWaitlist ? isActive ? "bg-red-600 text-white border border-red-500/50 shadow-[0_0_12px_rgba(239,68,68,0.4)]" : "bg-red-600/80 text-white border border-red-500/30 shadow-[0_0_8px_rgba(239,68,68,0.25)] hover:shadow-[0_0_14px_rgba(239,68,68,0.4)] animate-pulse" : isActive ? "bg-white/10 text-white border border-white/20" : "text-white/50 hover:text-white/80"}`}>
                   {isWaitlist ? "⚡ Waitlist" : item.label}
                 </button>
               );
@@ -271,10 +271,10 @@ export function WaitlistExperience() {
 
       {/* ═══ LIVE ACTIVITY TOAST ═══ */}
       {activity && (
-        <div className={`fixed bottom-6 left-6 z-40 transition-all duration-300 ${activityVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"}`}>
-          <div className="bg-black/70 backdrop-blur-xl border border-white/10 rounded-xl px-4 py-3 flex items-center gap-3 shadow-2xl max-w-[320px]">
+        <div className={`fixed bottom-3 sm:bottom-6 left-3 sm:left-6 z-40 transition-all duration-300 max-w-[280px] sm:max-w-[320px] ${activityVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"}`}>
+          <div className="bg-black/70 backdrop-blur-xl border border-white/10 rounded-xl px-3 sm:px-4 py-2.5 sm:py-3 flex items-center gap-2 sm:gap-3 shadow-2xl">
             <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse flex-shrink-0" />
-            <span className="text-white/60 text-xs">
+            <span className="text-white/60 text-[10px] sm:text-xs">
               <span className="text-white/90 font-medium">{activity.firstName}</span> from {activity.city || activity.country} joined {activity.minutesAgo}m ago
             </span>
           </div>
@@ -284,13 +284,13 @@ export function WaitlistExperience() {
       {/* ═══════════════════════════════════════════════════════
            SECTION 1: FEATURES
            ═══════════════════════════════════════════════════════ */}
-      <Section id="features" className="pt-28">
-        <div className="text-center mb-12">
+      <Section id="features" className="pt-20 sm:pt-28">
+        <div className="text-center mb-8 sm:mb-12">
           <p className="text-red-400 text-xs font-semibold uppercase tracking-[0.2em] mb-3 animate-pulse">Core Principles</p>
-          <h2 className="text-3xl md:text-4xl font-light text-white tracking-wide mb-4">How Zorvai actually teaches</h2>
-          <p className="text-white/50 text-base max-w-md mx-auto leading-relaxed">Not a chatbot. Not a video library. A tutor that checks real understanding — or gives your money back.</p>
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-light text-white tracking-wide mb-3 sm:mb-4">How Zorvai actually teaches</h2>
+          <p className="text-white/50 text-sm sm:text-base max-w-md mx-auto leading-relaxed">Not a chatbot. Not a video library. A tutor that checks real understanding — or gives your money back.</p>
         </div>
-        <div className="grid md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
           {[
             { icon: "📖", title: "Learn", desc: "AI teaches concepts step-by-step, adapted to your child's grade, curriculum (CBSE, NEB, SSC, GCSE), and language.", tag: "Step 1" },
             { icon: "🧠", title: "Recall", desc: "The student must explain it back in their own words. No moving on until they prove they understand — not just read.", tag: "Step 2" },
@@ -306,7 +306,7 @@ export function WaitlistExperience() {
             </div>
           ))}
         </div>
-        <div className="grid md:grid-cols-2 gap-4 mt-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mt-3 sm:mt-4">
           {[
             { icon: "🎙️", title: "Voice-First Tutoring", desc: "Students speak their answers. The AI listens, evaluates, and responds like a real tutor — in English, Hindi, Nepali, or Bengali." },
             { icon: "🛡️", title: "Money-Back Guarantee", desc: "Take a baseline quiz before starting. After 12+ sessions in 30 days, retake it. If scores haven't improved — full refund." },
@@ -326,10 +326,10 @@ export function WaitlistExperience() {
       <Section id="pricing">
         <div className="text-center mb-12">
           <p className="text-red-400 text-xs font-semibold uppercase tracking-[0.2em] mb-3">Early Access Pricing</p>
-          <h2 className="text-3xl md:text-4xl font-light text-white tracking-wide mb-4">The earlier you join, the more you save</h2>
-          <p className="text-white/50 text-base max-w-lg mx-auto">Locked forever. No price increases. Your tier is permanent.</p>
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-light text-white tracking-wide mb-3 sm:mb-4">The earlier you join, the more you save</h2>
+          <p className="text-white/50 text-sm sm:text-base max-w-lg mx-auto">Locked forever. No price increases. Your tier is permanent.</p>
         </div>
-        <div className="grid md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
           <div className="relative backdrop-blur-lg bg-white/[0.04] border-2 border-red-500/30 rounded-2xl p-6 overflow-hidden hover:border-red-500/50 transition-all hover:shadow-[0_0_40px_rgba(239,68,68,0.1)]">
             <div className="absolute top-0 right-0 bg-red-600 text-white text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-bl-xl">Best Deal</div>
             <p className="text-red-400/70 text-xs font-semibold uppercase tracking-widest mb-1">Founding Member</p>
@@ -369,34 +369,34 @@ export function WaitlistExperience() {
            SECTION 3: WAITLIST — Main Card
            ═══════════════════════════════════════════════════════ */}
       <Section id="waitlist">
-        <div className="flex items-center justify-center">
-          <div className="relative">
-            <div className="relative backdrop-blur-xl bg-black/60 border border-white/20 rounded-3xl p-8 w-full max-w-[420px] shadow-2xl">
-              <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-white/5 to-transparent pointer-events-none" />
+        <div className="flex items-center justify-center px-2">
+          <div className="relative w-full max-w-[420px]">
+            <div className="relative backdrop-blur-xl bg-black/60 border border-white/20 rounded-2xl sm:rounded-3xl p-5 sm:p-8 w-full shadow-2xl">
+              <div className="absolute inset-0 rounded-2xl sm:rounded-3xl bg-gradient-to-br from-white/5 to-transparent pointer-events-none" />
               <div className="relative z-10">
 
                 {/* ─── FORM STEP ─── */}
                 {step === "form" && (
                   <>
-                    <div className="mb-6 text-center">
-                      <h2 className="text-4xl font-light text-white mb-4 tracking-wide">Join the waitlist</h2>
-                      <p className="text-white/70 text-base leading-relaxed">Get early access to Zorvai — the AI tutor<br />that checks real understanding before moving on</p>
+                    <div className="mb-4 sm:mb-6 text-center">
+                      <h2 className="text-2xl sm:text-4xl font-light text-white mb-3 sm:mb-4 tracking-wide">Join the waitlist</h2>
+                      <p className="text-white/70 text-sm sm:text-base leading-relaxed">Get early access to Zorvai — the AI tutor that checks real understanding before moving on</p>
                     </div>
                     <form onSubmit={handleSubmit} className="mb-5 space-y-3">
                       <Input type="text" placeholder="Your full name" value={name} onChange={(e) => setName(e.target.value)} required className="bg-black/40 border-white/20 text-white placeholder:text-white/50 focus:border-white/40 focus:ring-white/20 h-12 rounded-xl backdrop-blur-sm" />
-                      <div className="flex gap-3">
-                        <Input type="email" placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} required className="flex-1 bg-black/40 border-white/20 text-white placeholder:text-white/50 focus:border-white/40 focus:ring-white/20 h-12 rounded-xl backdrop-blur-sm" />
-                        <Button type="submit" disabled={formLoading} className="h-12 px-6 bg-red-600 hover:bg-red-700 text-white font-medium rounded-xl transition-all duration-300 hover:shadow-lg hover:shadow-red-500/25 disabled:opacity-50">
+                      <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+                        <Input type="email" placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} required className="flex-1 bg-black/40 border-white/20 text-white placeholder:text-white/50 focus:border-white/40 focus:ring-white/20 h-11 sm:h-12 rounded-xl backdrop-blur-sm" />
+                        <Button type="submit" disabled={formLoading} className="h-11 sm:h-12 px-6 bg-red-600 hover:bg-red-700 text-white font-medium rounded-xl transition-all duration-300 hover:shadow-lg hover:shadow-red-500/25 disabled:opacity-50 w-full sm:w-auto">
                           {formLoading ? "..." : "Join Waitlist"}
                         </Button>
                       </div>
-                      <div className="flex gap-3">
+                      <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
                         <select value={country} onChange={(e) => setCountry(e.target.value)} className="flex-1 h-10 rounded-xl border border-white/20 bg-black/40 backdrop-blur-sm px-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-white/20 appearance-none cursor-pointer">
                           {COUNTRIES.map(c => <option key={c.code} value={c.code} className="bg-black text-white">{c.name}</option>)}
                         </select>
-                        <div className="flex rounded-xl border border-white/20 overflow-hidden">
+                        <div className="flex rounded-xl border border-white/20 overflow-hidden self-start">
                           {(["parent", "student"] as const).map(r => (
-                            <button type="button" key={r} onClick={() => setRole(r)} className={`px-3 text-xs font-medium transition-all ${role === r ? "bg-white/10 text-white" : "text-white/40 hover:text-white/60"}`}>{r === "parent" ? "Parent" : "Student"}</button>
+                            <button type="button" key={r} onClick={() => setRole(r)} className={`px-4 sm:px-3 py-2 sm:py-0 text-xs font-medium transition-all ${role === r ? "bg-white/10 text-white" : "text-white/40 hover:text-white/60"}`}>{r === "parent" ? "Parent" : "Student"}</button>
                           ))}
                         </div>
                       </div>
@@ -412,7 +412,7 @@ export function WaitlistExperience() {
                     <div className="text-center mb-5 bg-white/[0.03] border border-white/10 rounded-xl px-4 py-3">
                       <p className="text-white/50 text-xs">🎉 <span className="text-red-400 font-semibold">First 100 members</span> get <span className="text-white font-bold">60% off forever</span> — only <span className="text-white font-bold">$12/mo</span></p>
                     </div>
-                    <div className="flex items-center justify-center gap-6 text-center">
+                    <div className="flex items-center justify-center gap-4 sm:gap-6 text-center">
                       {[{ v: timeLeft.days, l: "days" }, { v: timeLeft.hours, l: "hours" }, { v: timeLeft.minutes, l: "min" }, { v: timeLeft.seconds, l: "sec" }].map((t, i) => (
                         <React.Fragment key={t.l}>{i > 0 && <div className="text-white/20">|</div>}<div><div className="text-2xl font-light text-white tabular-nums">{String(t.v).padStart(2, "0")}</div><div className="text-[10px] text-white/40 uppercase tracking-widest">{t.l}</div></div></React.Fragment>
                       ))}
@@ -491,9 +491,9 @@ export function WaitlistExperience() {
                   </div>
                 )}
               </div>
-              <div className="absolute inset-0 rounded-3xl bg-gradient-to-t from-transparent via-white/[0.02] to-white/[0.05] pointer-events-none" />
+              <div className="absolute inset-0 rounded-2xl sm:rounded-3xl bg-gradient-to-t from-transparent via-white/[0.02] to-white/[0.05] pointer-events-none" />
             </div>
-            <div className="absolute inset-0 rounded-3xl bg-gradient-to-r from-red-500/10 to-purple-600/10 blur-xl scale-110 -z-10 animate-pulse" />
+            <div className="absolute inset-0 rounded-2xl sm:rounded-3xl bg-gradient-to-r from-red-500/10 to-purple-600/10 blur-xl scale-110 -z-10 animate-pulse" />
           </div>
         </div>
       </Section>
@@ -504,10 +504,10 @@ export function WaitlistExperience() {
       <Section id="launch">
         <div className="text-center mb-12">
           <p className="text-red-400 text-xs font-semibold uppercase tracking-[0.2em] mb-3">Launch Day</p>
-          <h2 className="text-3xl md:text-4xl font-light text-white tracking-wide mb-4">Launching in {timeLeft.days} days</h2>
-          <p className="text-white/50 text-base max-w-md mx-auto">September 19, 2026 — here&apos;s the plan.</p>
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-light text-white tracking-wide mb-3 sm:mb-4">Launching in {timeLeft.days} days</h2>
+          <p className="text-white/50 text-sm sm:text-base max-w-md mx-auto">September 19, 2026 — here&apos;s the plan.</p>
         </div>
-        <div className="space-y-4">
+        <div className="space-y-3 sm:space-y-4">
           {[
             { day: "Now", title: "Join the Waitlist", desc: "Reserve your spot. First 100 get founding member pricing (60% off forever).", active: true },
             { day: "Day 1–10", title: "Early Access Invites", desc: "Top waitlist members get beta access. Test the tutor, give feedback, shape the product." },
@@ -515,7 +515,7 @@ export function WaitlistExperience() {
             { day: "Day 19", title: "Final Pre-Launch Check", desc: "All founding members confirmed. Discounts locked. Payment links sent." },
             { day: "Sept 19", title: "🚀 Public Launch", desc: "Zorvai goes live. Regular pricing ($29/mo) starts. Your founding discount is permanent." },
           ].map((item, i) => (
-            <div key={i} className={`flex gap-4 backdrop-blur-lg border rounded-2xl p-5 transition-all duration-300 hover:scale-[1.01] ${item.active ? "bg-red-500/[0.06] border-red-500/20 shadow-[0_0_20px_rgba(239,68,68,0.05)]" : "bg-white/[0.02] border-white/10 hover:border-white/20"}`}>
+            <div key={i} className={`flex gap-3 sm:gap-4 backdrop-blur-lg border rounded-xl sm:rounded-2xl p-4 sm:p-5 transition-all duration-300 hover:scale-[1.01] ${item.active ? "bg-red-500/[0.06] border-red-500/20 shadow-[0_0_20px_rgba(239,68,68,0.05)]" : "bg-white/[0.02] border-white/10 hover:border-white/20"}`}>
               <div className={`text-xs font-bold uppercase tracking-widest whitespace-nowrap pt-0.5 ${item.active ? "text-red-400" : "text-white/30"}`}>{item.day}</div>
               <div>
                 <h3 className={`text-sm font-medium mb-1 ${item.active ? "text-white" : "text-white/70"}`}>{item.title}</h3>
@@ -532,7 +532,7 @@ export function WaitlistExperience() {
       <Section id="faq">
         <div className="text-center mb-10">
           <p className="text-red-400 text-xs font-semibold uppercase tracking-[0.2em] mb-3">Questions & Answers</p>
-          <h2 className="text-3xl md:text-4xl font-light text-white tracking-wide mb-4">Frequently asked</h2>
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-light text-white tracking-wide mb-3 sm:mb-4">Frequently asked</h2>
         </div>
         <div className="space-y-2">
           {FAQS.map((faq, i) => (
@@ -547,8 +547,8 @@ export function WaitlistExperience() {
       <Section id="updates">
         <div className="text-center mb-12">
           <p className="text-red-400 text-xs font-semibold uppercase tracking-[0.2em] mb-3">Updates & Feedback</p>
-          <h2 className="text-3xl md:text-4xl font-light text-white tracking-wide mb-4">Building in public</h2>
-          <p className="text-white/50 text-base max-w-md mx-auto">We update this page as we ship. Your feedback shapes what we build next.</p>
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-light text-white tracking-wide mb-3 sm:mb-4">Building in public</h2>
+          <p className="text-white/50 text-sm sm:text-base max-w-md mx-auto">We update this page as we ship. Your feedback shapes what we build next.</p>
         </div>
         <div className="space-y-3 mb-10">
           {[
