@@ -430,6 +430,60 @@ export default function WaitlistPage() {
                   </div>
                 )}
 
+                {/* Pay Now / Maybe Later */}
+                {signup.discountPercent > 0 && (
+                  <div style={{ marginBottom:20 }}>
+                    <button onClick={async () => {
+                      try {
+                        const res = await fetch("/api/waitlist/payment/intent", {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({ email, planId: "student_solo_monthly" }),
+                        });
+                        const data = await res.json();
+                        if (data.checkoutUrl) window.location.href = data.checkoutUrl;
+                        else alert("Payment setup coming soon! Your discount is locked.");
+                      } catch {
+                        alert("Payment setup coming soon! Your discount is locked.");
+                      }
+                    }} style={{
+                      width:"100%", padding:"16px", borderRadius:14, border:"none",
+                      background:"linear-gradient(135deg, #4ecdc4, #3db8b0)",
+                      color:"#0a0a09", fontSize:15, fontWeight:700, cursor:"pointer",
+                      fontFamily:"'Inter',sans-serif", position:"relative", overflow:"hidden",
+                      transition:"all 250ms cubic-bezier(.4,0,.2,1)",
+                      boxShadow:"0 4px 24px rgba(78,205,196,0.25)",
+                      letterSpacing:"-0.2px",
+                    }}
+                    onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 8px 32px rgba(78,205,196,0.35)"; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "0 4px 24px rgba(78,205,196,0.25)"; }}
+                    >
+                      Pay now — lock {signup.discountPercent}% off forever
+                    </button>
+
+                    <div style={{ display:"flex", alignItems:"center", justifyContent:"center", gap:6, marginTop:12 }}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4ecdc4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                      </svg>
+                      <span style={{ fontSize:11, color:"#4a4844" }}>
+                        100% refund if scores don&apos;t improve. No questions asked.
+                      </span>
+                    </div>
+
+                    <button onClick={() => {/* just stay on success screen */}} style={{
+                      width:"100%", marginTop:12, padding:"10px", borderRadius:10,
+                      border:"none", background:"transparent", color:"#3a3835",
+                      fontSize:12, cursor:"pointer", fontFamily:"'Inter',sans-serif",
+                      transition:"color 200ms",
+                    }}
+                    onMouseEnter={(e) => { e.currentTarget.style.color = "#7a7672"; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.color = "#3a3835"; }}
+                    >
+                      Maybe later — I&apos;ll keep my spot
+                    </button>
+                  </div>
+                )}
+
                 {/* Share section */}
                 <div style={{ borderTop:"1px solid #1a1918", paddingTop:20 }}>
                   <p style={{ fontSize:12, color:"#4a4844", fontWeight:600, letterSpacing:"0.08em", textTransform:"uppercase", marginBottom:12 }}>Share to jump the line</p>
