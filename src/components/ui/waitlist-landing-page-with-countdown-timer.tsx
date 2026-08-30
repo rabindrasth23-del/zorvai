@@ -283,8 +283,19 @@ export function WaitlistExperience() {
 
       {/* ════ STICKY NAV ════ */}
       <div className="fixed top-6 left-1/2 -translate-x-1/2 z-50">
-        <div className="bg-black/50 backdrop-blur-xl border border-white/10 rounded-full px-5 py-2.5">
-          <div className="flex items-center gap-1">
+        <div className="bg-black/50 backdrop-blur-xl border border-white/10 rounded-full px-3 py-2">
+          <div className="flex items-center gap-2">
+            {/* Logo + Brand */}
+            <button onClick={() => scrollTo("waitlist")} className="flex items-center gap-2 px-2 py-1 rounded-full hover:bg-white/5 transition-all group">
+              <div className="w-8 h-8 rounded-full overflow-hidden border-2 border-white/20 group-hover:border-white/40 transition-all shadow-[0_0_10px_rgba(78,205,196,0.2)]">
+                <img src="/zorvai-logo.png" alt="Zorvai" className="w-full h-full object-cover" />
+              </div>
+              <span className="text-white font-semibold text-sm tracking-tight hidden sm:block">Zorvai</span>
+            </button>
+
+            <div className="w-px h-5 bg-white/10 mx-1" />
+
+            {/* Nav items */}
             {navItems.map((item) => {
               const isWaitlist = item.id === "waitlist";
               const isActive = activeNav === item.id;
