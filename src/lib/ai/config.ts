@@ -1,15 +1,17 @@
 /**
  * AI Provider Engine — Configuration
  *
- * Per-call-type provider chains, timeouts, and circuit breaker settings.
- * All AI calls route through runAICall() which uses these chains.
+ * Direct API providers — NO OpenRouter.
+ * Claude (Anthropic) for quality-critical phases.
+ * Gemini (Google) for high-volume phases.
+ * OpenAI as optional fallback.
  */
 
 // ---------------------------------------------------------------------------
 // Provider identifiers
 // ---------------------------------------------------------------------------
 
-export type ProviderId = 'claude_opus_5_fast' | 'gemini_3_7_flash' | 'gpt_5_6_luna_pro' | 'checkin_fallback';
+export type ProviderId = 'claude' | 'gemini' | 'openai';
 
 export type CallType =
   | 'plan'
@@ -28,12 +30,16 @@ export type CallType =
 // Provider configuration
 // ---------------------------------------------------------------------------
 
+export type ProviderType = 'anthropic' | 'gemini' | 'openai';
+
 export interface ProviderConfig {
   id: ProviderId;
   name: string;
+  /** The provider type determines which adapter to use */
+  type: ProviderType;
   /** Model identifier to pass to the provider */
   model: string;
-  /** For OpenAI-compatible providers — the base URL */
+  /** For OpenAI — the base URL (not needed for Anthropic/Gemini) */
   baseUrl?: string;
   /** Environment variable name holding the API key */
   apiKeyEnv: string;
@@ -42,37 +48,30 @@ export interface ProviderConfig {
 }
 
 export const PROVIDERS: Record<ProviderId, ProviderConfig> = {
-  claude_opus_5_fast: {
-    id: 'claude_opus_5_fast',
-    name: 'Claude Opus 5 Fast (OpenRouter)',
-    model: 'anthropic/claude-opus-5-fast',
-    baseUrl: 'https://openrouter.ai/api/v1',
-    apiKeyEnv: 'OPENROUTER_API_KEY',
-    timeoutMs: 15_000, // Strict 15s timeout
+  claude: {
+    id: 'claude',
+    name: 'Claude (Anthropic Direct)',
+    type: 'anthropic',
+    model: 'claude-sonnet-4-20250514',
+    apiKeyEnv: 'ANTHROPIC_API_KEY',
+    timeoutMs: 30_000,
   },
-  gemini_3_7_flash: {
-    id: 'gemini_3_7_flash',
-    name: 'Gemini 3.7 Flash (OpenRouter)',
-    model: 'google/gemini-3.7-flash',
-    baseUrl: 'https://openrouter.ai/api/v1',
-    apiKeyEnv: 'OPENROUTER_API_KEY',
-    timeoutMs: 15_000,
+  gemini: {
+    id: 'gemini',
+    name: 'Gemini (Google AI Direct)',
+    type: 'gemini',
+    model: 'gemini-2.5-flash',
+    apiKeyEnv: 'GEMINI_API_KEY',
+    timeoutMs: 30_000,
   },
-  gpt_5_6_luna_pro: {
-    id: 'gpt_5_6_luna_pro',
-    name: 'GPT-5.6 Luna Pro (OpenRouter)',
-    model: 'openai/gpt-5.6-luna-pro',
-    baseUrl: 'https://openrouter.ai/api/v1',
-    apiKeyEnv: 'OPENROUTER_API_KEY',
-    timeoutMs: 15_000,
-  },
-  checkin_fallback: {
-    id: 'checkin_fallback',
-    name: 'Check-in Fallback',
-    model: process.env.CHECKIN_FALLBACK_MODEL || 'anthropic/claude-3-haiku',
-    baseUrl: 'https://openrouter.ai/api/v1',
-    apiKeyEnv: 'OPENROUTER_API_KEY',
-    timeoutMs: 10_000,
+  openai: {
+    id: 'openai',
+    name: 'ChatGPT (OpenAI Direct)',
+    type: 'openai',
+    model: 'gpt-4o-mini',
+    baseUrl: 'https://api.openai.com/v1',
+    apiKeyEnv: 'OPENAI_API_KEY',
+    timeoutMs: 30_000,
   },
 };
 
@@ -81,44 +80,36 @@ export const PROVIDERS: Record<ProviderId, ProviderConfig> = {
 // ---------------------------------------------------------------------------
 
 /**
- * Standard High-Reliability Chain (for quality-critical phases like Challenge/Feedback)
- * 1. Claude Opus 5 Fast
- * 2. Gemini 3.7 Flash
- * 3. GPT-5.6 Luna Pro
+ * Claude-first chain (quality-critical phases)
+ * 1. Claude — best reasoning
+ * 2. Gemini — fast fallback
+ * 3. OpenAI — last resort
  */
-const DEFAULT_CHAIN: ProviderId[] = ['claude_opus_5_fast', 'gemini_3_7_flash', 'gpt_5_6_luna_pro'];
+const CLAUDE_FIRST: ProviderId[] = ['claude', 'gemini', 'openai'];
 
 /**
- * Teach Phase Chain
- * Uses GPT-5.6 Luna Pro as primary to balance cost during the highest-volume phase,
- * reserving Opus 5 Fast for evaluation phases.
+ * Gemini-first chain (high-volume, cost-sensitive phases)
+ * 1. Gemini — fast and cheap
+ * 2. Claude — quality fallback
+ * 3. OpenAI — last resort
  */
-const TEACH_CHAIN: ProviderId[] = ['gpt_5_6_luna_pro', 'claude_opus_5_fast', 'gemini_3_7_flash'];
-
-/**
- * Check-in chain:
- * Uses Claude Opus 5 Fast first. If it fails, falls back to the configured fallback model.
- */
-function getCheckinChain(): ProviderId[] {
-  const fallbackEnabled = process.env.CHECKIN_FALLBACK_ENABLED === 'true';
-  if (fallbackEnabled) {
-    return ['claude_opus_5_fast', 'checkin_fallback'];
-  }
-  return ['claude_opus_5_fast'];
-}
+const GEMINI_FIRST: ProviderId[] = ['gemini', 'claude', 'openai'];
 
 export const PROVIDER_CHAINS: Record<CallType, ProviderId[]> = {
-  plan: DEFAULT_CHAIN,
-  teach: TEACH_CHAIN,
-  teach_chat: TEACH_CHAIN,
-  key_concepts_extract: ['gemini_3_7_flash', 'claude_opus_5_fast'],
-  recall: DEFAULT_CHAIN,
-  challenge: DEFAULT_CHAIN,
-  feedback: DEFAULT_CHAIN,
-  chatbot: DEFAULT_CHAIN,
-  checkin: getCheckinChain(),
-  onboarding_transition: ['gemini_3_7_flash', 'claude_opus_5_fast'],
-  safety_classifier: ['gemini_3_7_flash', 'claude_opus_5_fast'],
+  // Claude for quality-critical evaluation phases
+  plan: CLAUDE_FIRST,
+  recall: CLAUDE_FIRST,
+  challenge: CLAUDE_FIRST,
+  feedback: CLAUDE_FIRST,
+  checkin: CLAUDE_FIRST,
+
+  // Gemini for high-volume teaching/extraction phases
+  teach: GEMINI_FIRST,
+  teach_chat: GEMINI_FIRST,
+  key_concepts_extract: GEMINI_FIRST,
+  chatbot: GEMINI_FIRST,
+  onboarding_transition: GEMINI_FIRST,
+  safety_classifier: GEMINI_FIRST,
 };
 
 // ---------------------------------------------------------------------------

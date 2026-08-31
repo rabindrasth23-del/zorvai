@@ -3,16 +3,28 @@ import { createAdminClient } from "@/lib/supabase/admin";
 
 export async function POST(request: Request) {
   try {
-    const { email, commitmentText, commitmentGoal } = await request.json();
+    const {
+      email,
+      commitmentSubject,
+      commitmentGoal,
+      commitmentText,
+      chosenPlan,
+      planPriceUsd,
+      planOriginalPrice,
+    } = await request.json();
 
     const admin = createAdminClient();
 
     const { error } = await admin
       .from("waitlist")
       .update({
-        commitment_text: commitmentText,
-        commitment_goal: commitmentGoal,
+        commitment_subject: commitmentSubject || null,
+        commitment_text: commitmentText || null,
+        commitment_goal: commitmentGoal || null,
         commitment_made_at: new Date().toISOString(),
+        chosen_plan: chosenPlan || null,
+        plan_price_usd: planPriceUsd || null,
+        plan_original_price_usd: planOriginalPrice || null,
       })
       .eq("email", email.toLowerCase().trim());
 

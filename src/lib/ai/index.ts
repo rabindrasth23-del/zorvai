@@ -22,7 +22,8 @@ import {
 import { RESPONSE_SCHEMAS } from './schema';
 import { getSystemPrompt, getUserMessage } from './prompts';
 import { callAnthropic } from './adapters/anthropic';
-import { callOpenAICompatible } from './adapters/openai-compatible';
+import { callGemini } from './adapters/gemini';
+import { callOpenAI } from './adapters/openai-compatible';
 import { createAdminClient } from '../supabase/admin';
 
 // ---------------------------------------------------------------------------
@@ -68,7 +69,7 @@ function recordSuccess(providerId: ProviderId): void {
 }
 
 // ---------------------------------------------------------------------------
-// Provider dispatch
+// Provider dispatch — routes to the correct adapter
 // ---------------------------------------------------------------------------
 
 function callProvider(
@@ -79,7 +80,18 @@ function callProvider(
   attachment?: { base64: string; mimeType: string; filename: string }
 ) {
   const provider = PROVIDERS[providerId];
-  return callOpenAICompatible({ systemPrompt, userMessage, provider, signal, attachment });
+  const request = { systemPrompt, userMessage, provider, signal, attachment };
+
+  switch (provider.type) {
+    case 'anthropic':
+      return callAnthropic(request);
+    case 'gemini':
+      return callGemini(request);
+    case 'openai':
+      return callOpenAI(request);
+    default:
+      throw new Error(`Unknown provider type: ${provider.type}`);
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -232,13 +244,8 @@ export async function runAICall<T = unknown>(
   }
 
   // All providers failed
-  const isCheckin = callType === 'checkin';
-  const checkinNote = isCheckin
-    ? ' NOTE: Check-in uses a restricted provider chain. If CHECKIN_FALLBACK_PROVIDER is not set, only Claude is available.'
-    : '';
-
   throw new Error(
-    `All providers failed for call type "${callType}".${checkinNote}\n` +
+    `All providers failed for call type "${callType}".\n` +
     `Errors:\n${errors.map((e) => `  ${e.provider}: ${e.error}`).join('\n')}`
   );
 }

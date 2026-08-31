@@ -24,10 +24,10 @@ const LAUNCH_DATE = new Date("2026-09-19T00:00:00+05:45");
 interface Stats {
   total: number;
   lastHour: number;
-  currentTier: number;
   spotsLeft: number | null;
   discountPercent: number;
   recentActivity?: { firstName: string; city: string | null; country: string; minutesAgo: number }[];
+  leaders?: { rank: number; firstName: string; city: string | null; country: string; referralCount: number }[];
 }
 
 interface SignupData {
@@ -49,6 +49,12 @@ const COUNTRIES = [
 ];
 
 const SUBJECTS = ["Mathematics", "Science", "English", "Biology", "Chemistry", "Physics", "History", "Geography", "All subjects"];
+
+const PLANS = [
+  { id: "weekly", name: "Weekly", original: "$12.99/week", price: "$5.19/week", priceNum: "5.19", saving: "Save 60%", description: "Try it for a week", badge: null },
+  { id: "monthly", name: "Monthly", original: "$49/month", price: "$19/month", priceNum: "19", saving: "60% off forever", description: "Best for most families", badge: "Most popular" },
+  { id: "annual", name: "Annual", original: "$299/year", price: "$119/year", priceNum: "9.99", saving: "Under $10/month", description: "Best value — 2 months free", badge: "Best value" },
+];
 
 const FAQS = [
   { q: "What age is Zorvai designed for?", a: "Zorvai works best for students in grades 6–12 (ages 11–18). It adapts to the student's curriculum, language, and exam board — whether that's CBSE, SSC, NEB, GCSE, or others." },
@@ -153,6 +159,7 @@ export function WaitlistExperience() {
   const [commitSubject, setCommitSubject] = useState("Mathematics");
   const [commitGoal, setCommitGoal] = useState("");
   const [commitLoading, setCommitLoading] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState("monthly");
 
   const timeLeft = useCountdown(LAUNCH_DATE);
 
@@ -224,12 +231,30 @@ export function WaitlistExperience() {
   const handleCommitment = async () => {
     if (!commitGoal.trim()) return;
     setCommitLoading(true);
+    const plan = PLANS.find(p => p.id === selectedPlan);
     try {
-      await fetch("/api/waitlist/commitment", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email, commitmentText: `I commit to helping ${signup?.childName || "my child"} master ${commitSubject}`, commitmentGoal: commitGoal }) });
+      await fetch("/api/waitlist/commitment", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({
+        email,
+        commitmentSubject: commitSubject,
+        commitmentGoal: commitGoal,
+        commitmentText: `I commit to helping ${signup?.childName || "my child"} master ${commitSubject}`,
+        chosenPlan: selectedPlan,
+        planPriceUsd: plan?.priceNum,
+        planOriginalPrice: plan?.original,
+      }) });
     } catch {} finally { setCommitLoading(false); setStep("success"); }
   };
 
   const handleCopy = () => { if (!signup) return; navigator.clipboard.writeText(`https://zorvai.ca/?ref=${signup.referralCode}`); setCopied(true); setTimeout(() => setCopied(false), 2000); };
+
+  const handleWhatsAppShare = () => {
+    if (!signup) return;
+    const plan = PLANS.find(p => p.id === selectedPlan);
+    const childName = signup.childName || "my child";
+    const url = `https://zorvai.ca/?ref=${signup.referralCode}`;
+    const message = `I just made a commitment to help ${childName} master ${commitSubject} this year.\n\nZorvai is an AI tutor that teaches like a real one-to-one tutor — checking real understanding before moving on.\n\nAnd if your child's score doesn't improve — full refund.\n\nRight now: ${plan?.price} (${plan?.saving}).\n\nOnly ${stats?.spotsLeft ?? "limited"} founding spots left.\n\nJoin here: ${url}`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, "_blank");
+  };
 
   const navItems = [
     { id: "features", label: "Features" }, { id: "pricing", label: "Pricing" },
@@ -326,42 +351,37 @@ export function WaitlistExperience() {
       <Section id="pricing">
         <div className="text-center mb-12">
           <p className="text-red-400 text-xs font-semibold uppercase tracking-[0.2em] mb-3">Early Access Pricing</p>
-          <h2 className="text-2xl sm:text-3xl md:text-4xl font-light text-white tracking-wide mb-3 sm:mb-4">The earlier you join, the more you save</h2>
-          <p className="text-white/50 text-sm sm:text-base max-w-lg mx-auto">Locked forever. No price increases. Your tier is permanent.</p>
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-light text-white tracking-wide mb-3 sm:mb-4">Can you invest $19/month in your child&apos;s future?</h2>
+          <p className="text-white/50 text-sm sm:text-base max-w-lg mx-auto">Regular price is $49/month. Founding members lock in 60% off forever. That&apos;s less than one hour of a private tutor — with a money-back guarantee.</p>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
-          <div className="relative backdrop-blur-lg bg-white/[0.04] border-2 border-red-500/30 rounded-2xl p-6 overflow-hidden hover:border-red-500/50 transition-all hover:shadow-[0_0_40px_rgba(239,68,68,0.1)]">
-            <div className="absolute top-0 right-0 bg-red-600 text-white text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-bl-xl">Best Deal</div>
-            <p className="text-red-400/70 text-xs font-semibold uppercase tracking-widest mb-1">Founding Member</p>
-            <p className="text-white/40 text-xs mb-4">First 100 members</p>
-            <div className="flex items-baseline gap-1 mb-1"><span className="text-white/30 text-lg line-through">$29</span><span className="text-4xl font-bold text-white">$12</span><span className="text-white/40 text-sm">/mo</span></div>
-            <p className="text-red-400 text-xs font-semibold mb-4">60% off — forever</p>
-            <ul className="space-y-2 text-sm text-white/50 mb-5">
-              {["Unlimited AI tutoring", "Voice + text", "All subjects", "Money-back guarantee", "Founding badge forever"].map(f => <li key={f} className="flex items-center gap-2"><span className="text-green-400">✓</span>{f}</li>)}
-            </ul>
-            <p className="text-[10px] text-white/20">{stats?.spotsLeft ?? "~"} spots remaining</p>
-          </div>
-          <div className="backdrop-blur-lg bg-white/[0.03] border border-white/10 rounded-2xl p-6 hover:border-white/20 transition-all">
-            <p className="text-white/60 text-xs font-semibold uppercase tracking-widest mb-1">Early Member</p>
-            <p className="text-white/40 text-xs mb-4">Members 101–500</p>
-            <div className="flex items-baseline gap-1 mb-1"><span className="text-white/30 text-lg line-through">$29</span><span className="text-4xl font-bold text-white">$17</span><span className="text-white/40 text-sm">/mo</span></div>
-            <p className="text-white/50 text-xs font-semibold mb-4">40% off — forever</p>
-            <ul className="space-y-2 text-sm text-white/50 mb-5">
-              {["Unlimited AI tutoring", "Voice + text", "All subjects", "Money-back guarantee"].map(f => <li key={f} className="flex items-center gap-2"><span className="text-green-400">✓</span>{f}</li>)}
-            </ul>
-          </div>
-          <div className="backdrop-blur-lg bg-white/[0.03] border border-white/10 rounded-2xl p-6 hover:border-white/20 transition-all">
-            <p className="text-white/60 text-xs font-semibold uppercase tracking-widest mb-1">Regular</p>
-            <p className="text-white/40 text-xs mb-4">After launch</p>
-            <div className="flex items-baseline gap-1 mb-1"><span className="text-4xl font-bold text-white">$29</span><span className="text-white/40 text-sm">/mo</span></div>
-            <p className="text-white/30 text-xs font-semibold mb-4">Full price</p>
-            <ul className="space-y-2 text-sm text-white/50 mb-5">
-              {["Unlimited AI tutoring", "Voice + text", "All subjects", "Money-back guarantee"].map(f => <li key={f} className="flex items-center gap-2"><span className="text-green-400">✓</span>{f}</li>)}
-            </ul>
-          </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
+          {PLANS.map((plan) => (
+            <div key={plan.id} className={`relative backdrop-blur-lg rounded-2xl p-6 transition-all duration-300 hover:scale-[1.02] cursor-pointer ${
+              plan.id === "monthly"
+                ? "bg-white/[0.04] border-2 border-red-500/30 hover:border-red-500/50 hover:shadow-[0_0_40px_rgba(239,68,68,0.1)]"
+                : "bg-white/[0.03] border border-white/10 hover:border-white/20"
+            }`}>
+              {plan.badge && (
+                <div className="absolute top-0 right-0 bg-red-600 text-white text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-bl-xl">{plan.badge}</div>
+              )}
+              <p className={`text-xs font-semibold uppercase tracking-widest mb-1 ${plan.id === "monthly" ? "text-red-400/70" : "text-white/60"}`}>{plan.name}</p>
+              <p className="text-white/40 text-xs mb-4">{plan.description}</p>
+              <div className="flex items-baseline gap-1 mb-1">
+                <span className="text-white/30 text-sm line-through">{plan.original}</span>
+              </div>
+              <div className="flex items-baseline gap-1 mb-1">
+                <span className={`text-3xl font-bold ${plan.id === "monthly" ? "text-white" : "text-white/90"}`}>{plan.price.split("/")[0]}</span>
+                <span className="text-white/40 text-sm">/{plan.price.split("/")[1]}</span>
+              </div>
+              <p className={`text-xs font-semibold mb-4 ${plan.id === "monthly" ? "text-red-400" : "text-white/50"}`}>{plan.saving}</p>
+              <ul className="space-y-2 text-sm text-white/50">
+                {["Unlimited AI tutoring", "Voice + text", "All subjects", "Money-back guarantee", ...(plan.id !== "weekly" ? ["Founding badge forever"] : [])].map(f => <li key={f} className="flex items-center gap-2"><span className="text-green-400">✓</span>{f}</li>)}
+              </ul>
+            </div>
+          ))}
         </div>
         <div className="mt-6 backdrop-blur-lg bg-white/[0.02] border border-white/10 rounded-xl p-4 text-center">
-          <p className="text-white/40 text-sm"><span className="text-white/60 font-medium">Family plans at launch:</span> $49/mo for up to 3 children · $399/year family annual (save 32%)</p>
+          <p className="text-white/40 text-sm">💳 Payment collected at launch — not now. Lock in your price today.</p>
         </div>
       </Section>
 
@@ -409,8 +429,8 @@ export function WaitlistExperience() {
                       </div>
                       <span className="text-white/70 text-sm">{stats && stats.total > 0 ? `~${stats.total}+ families joined` : "~2k+ families joined"}</span>
                     </div>
-                    <div className="text-center mb-5 bg-white/[0.03] border border-white/10 rounded-xl px-4 py-3">
-                      <p className="text-white/50 text-xs">🎉 <span className="text-red-400 font-semibold">First 100 members</span> get <span className="text-white font-bold">60% off forever</span> — only <span className="text-white font-bold">$12/mo</span></p>
+                    <div className="text-center mb-5 bg-white/[0.03] border border-white/10 rounded-xl px-4 py-3" id="spots-badge">
+                      <p className="text-white/50 text-xs">🎉 <span className="text-red-400 font-semibold">Founding members</span> get <span className="text-white font-bold">60% off forever</span> — only <span className="text-white font-bold">$19/mo</span> (was $49)</p>
                     </div>
                     <div className="flex items-center justify-center gap-4 sm:gap-6 text-center">
                       {[{ v: timeLeft.days, l: "days" }, { v: timeLeft.hours, l: "hours" }, { v: timeLeft.minutes, l: "min" }, { v: timeLeft.seconds, l: "sec" }].map((t, i) => (
@@ -445,12 +465,36 @@ export function WaitlistExperience() {
                     {/* Live preview */}
                     {commitGoal && (
                       <div className="mt-4 bg-white/[0.03] border border-white/10 rounded-xl p-4">
+                        <p className="text-[10px] text-white/30 uppercase tracking-widest font-semibold mb-1">Your commitment</p>
                         <p className="text-white/70 text-sm italic leading-relaxed">&ldquo;I commit to helping {signup.childName || "my child"} master {commitSubject} — {commitGoal}&rdquo;</p>
                       </div>
                     )}
 
+                    {/* Plan selection inside commitment */}
+                    <div className="mt-5 space-y-2">
+                      <p className="text-[10px] text-white/30 uppercase tracking-widest font-semibold">Choose your plan</p>
+                      {PLANS.map(plan => (
+                        <div key={plan.id} onClick={() => setSelectedPlan(plan.id)} className={`flex items-center justify-between p-3 rounded-xl cursor-pointer transition-all duration-200 ${selectedPlan === plan.id ? "bg-white/[0.06] border border-red-500/30" : "bg-white/[0.02] border border-white/10 hover:border-white/20"}`}>
+                          <div className="flex items-center gap-2">
+                            <span className={`w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${selectedPlan === plan.id ? "border-red-400" : "border-white/20"}`}>
+                              {selectedPlan === plan.id && <span className="w-2 h-2 rounded-full bg-red-400" />}
+                            </span>
+                            <div>
+                              <span className="text-sm font-medium text-white">{plan.name}</span>
+                              {plan.badge && <span className="ml-2 text-[9px] bg-red-500/20 text-red-400 px-1.5 py-0.5 rounded-full uppercase font-bold">{plan.badge}</span>}
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <span className={`text-sm font-bold ${selectedPlan === plan.id ? "text-red-400" : "text-white/80"}`}>{plan.price}</span>
+                            <span className="text-[10px] text-white/30 line-through block">{plan.original}</span>
+                          </div>
+                        </div>
+                      ))}
+                      <p className="text-[10px] text-white/20 text-center">💳 Payment at launch — not now. Lock your price today.</p>
+                    </div>
+
                     <button onClick={handleCommitment} disabled={commitLoading || !commitGoal.trim()} className="w-full mt-4 h-12 bg-red-600 hover:bg-red-700 text-white font-medium rounded-xl transition-all duration-300 hover:shadow-lg hover:shadow-red-500/25 disabled:opacity-50 text-sm">
-                      {commitLoading ? "Saving..." : "Save & continue →"}
+                      {commitLoading ? "Saving..." : "Lock in my commitment →"}
                     </button>
                     <button onClick={() => setStep("success")} className="text-[11px] text-white/20 hover:text-white/40 transition-colors mt-2 block mx-auto">Skip for now</button>
                   </div>
@@ -463,24 +507,18 @@ export function WaitlistExperience() {
                       <svg className="w-8 h-8 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
                     </div>
                     <h3 className="text-xl font-semibold text-white mb-1">{signup.alreadyJoined ? "Welcome back! 👋" : "You're on the list! 🎉"}</h3>
-                    <p className="text-white/70 text-sm mb-3">Position <span className="text-white font-bold">#{signup.position}</span> · {signup.discountPercent > 0 ? `${signup.discountPercent}% off forever` : "We'll notify you at launch"}</p>
+                    <p className="text-white/70 text-sm mb-1">Position <span className="text-white font-bold">#{signup.position}</span> · 60% off forever</p>
+                    <p className="text-white/40 text-xs mb-3">Share to move up the waitlist. Every family you bring in jumps you 50 spots.</p>
                     <div className="inline-flex items-center gap-2 bg-white/5 border border-white/10 rounded-lg px-4 py-2 mb-4">
-                      <span className="text-xs text-white/40">Code:</span>
+                      <span className="text-xs text-white/40">Your code:</span>
                       <span className="text-sm font-bold text-white tracking-widest font-mono">{signup.referralCode}</span>
                     </div>
-                    {signup.discountPercent > 0 && (
-                      <div className="mb-4">
-                        <div className="flex items-baseline justify-center gap-2 mb-3"><span className="text-sm text-white/30 line-through">$29/mo</span><span className="text-3xl font-bold text-white">${Math.round(29 * (1 - signup.discountPercent / 100))}</span><span className="text-sm text-white/30">/mo forever</span></div>
-                        <Button onClick={async () => { try { const r = await fetch("/api/waitlist/payment/intent", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email, planId: "student_solo_monthly" }) }); const d = await r.json(); if (d.checkoutUrl) window.location.href = d.checkoutUrl; else alert("Payment setup coming soon!"); } catch { alert("Payment setup coming soon!"); } }} className="w-full h-12 bg-red-600 hover:bg-red-700 text-white rounded-xl mb-2">💳 Lock ${Math.round(29 * (1 - signup.discountPercent / 100))}/mo forever</Button>
-                        <button className="text-[11px] text-white/20 hover:text-white/40 transition-colors">Maybe later</button>
-                      </div>
-                    )}
                     {/* Referral milestones */}
                     <div className="border-t border-white/10 pt-4">
                       <p className="text-[10px] text-white/30 uppercase tracking-widest font-semibold mb-3">Share = jump 50 spots</p>
                       <div className="flex gap-2 mb-3">
-                        <button onClick={() => { const m = encodeURIComponent(`I joined the Zorvai waitlist!\nJoin: https://zorvai.ca/?ref=${signup.referralCode}`); window.open(`https://wa.me/?text=${m}`, "_blank"); }} className="flex-1 h-10 rounded-xl bg-white/5 border border-white/10 text-[#25d366] text-xs font-semibold hover:bg-white/10 transition-colors">WhatsApp</button>
-                        <button onClick={handleCopy} className={`flex-1 h-10 rounded-xl bg-white/5 border border-white/10 text-xs font-semibold transition-colors ${copied ? "text-green-400" : "text-white/50 hover:bg-white/10"}`}>{copied ? "Copied ✓" : "Copy link"}</button>
+                        <button onClick={handleWhatsAppShare} className="flex-1 h-10 rounded-xl bg-[#25D366]/20 border border-[#25D366]/30 text-[#25d366] text-xs font-semibold hover:bg-[#25D366]/30 transition-colors">📱 WhatsApp</button>
+                        <button onClick={handleCopy} className={`flex-1 h-10 rounded-xl bg-white/5 border border-white/10 text-xs font-semibold transition-colors ${copied ? "text-green-400" : "text-white/50 hover:bg-white/10"}`}>{copied ? "Copied ✓" : "📋 Copy link"}</button>
                       </div>
                       <div className="space-y-1.5 text-left">
                         {[{ n: 1, t: "referral → jump 50 spots" }, { n: 3, t: "referrals → best tier guaranteed" }, { n: 10, t: "referrals → Founding Member" }].map(m => (
@@ -524,6 +562,143 @@ export function WaitlistExperience() {
             </div>
           ))}
         </div>
+      </Section>
+
+      {/* ═══════════════════════════════════════════════════════
+           SECTION: PROBLEM STATEMENT (from master prompt)
+           ═══════════════════════════════════════════════════════ */}
+      <Section id="problem">
+        <h2 className="text-2xl sm:text-3xl font-light text-white tracking-wide mb-5">Here&apos;s what&apos;s actually happening.</h2>
+        <div className="w-10 h-0.5 bg-red-500 mb-6" />
+        <p className="text-base sm:text-lg text-white leading-relaxed mb-4">Your child re-reads their notes. It feels productive.</p>
+        <p className="text-sm sm:text-base text-white/50 leading-relaxed mb-5">
+          Research consistently shows students forget the vast majority of re-read material within 24 hours. They&apos;re not lazy — nobody taught them how to actually retain what they study.
+        </p>
+        <div className="backdrop-blur-lg bg-white/[0.03] border border-white/10 rounded-xl p-5">
+          <p className="text-base text-white/80 leading-relaxed italic">
+            &ldquo;The students who consistently do better have one thing: someone who checks real understanding — not just whether they read.&rdquo;
+          </p>
+        </div>
+      </Section>
+
+      {/* ═══════════════════════════════════════════════════════
+           SECTION: GUARANTEE (from master prompt)
+           ═══════════════════════════════════════════════════════ */}
+      <Section id="guarantee-section">
+        <div className="backdrop-blur-lg bg-white/[0.02] border border-white/10 rounded-2xl p-6 sm:p-8">
+          <h2 className="text-xl sm:text-2xl font-semibold text-white mb-1">Real improvement.</h2>
+          <h2 className="text-xl sm:text-2xl font-semibold text-red-400 mb-6">Or your money back.</h2>
+          <div className="h-px bg-white/10 mb-5" />
+          <p className="text-white/50 text-sm sm:text-base leading-relaxed mb-5">
+            We track your child&apos;s score before they start and after they complete their sessions. If it doesn&apos;t go up — full refund. No arguments. No &ldquo;they didn&apos;t try hard enough.&rdquo; Just two numbers: before and after.
+          </p>
+          <div className="h-px bg-white/10 mb-5" />
+          <div className="space-y-3">
+            {[
+              "Take a short quiz when they start — 5 minutes, 10 questions.",
+              "Complete at least 12 study sessions in 30 days.",
+              "If the score doesn't improve — full refund, processed in 5 days.",
+            ].map((text, i) => (
+              <div key={i} className="flex items-start gap-3">
+                <span className="text-red-400 font-bold text-base min-w-[20px] pt-0.5">{i + 1}</span>
+                <span className="text-white/50 text-sm leading-relaxed">{text}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </Section>
+
+      {/* ═══════════════════════════════════════════════════════
+           SECTION: JEALOUSY / COMMITMENT FEED (from master prompt)
+           ═══════════════════════════════════════════════════════ */}
+      <Section id="social-proof">
+        <h2 className="text-xl sm:text-2xl font-semibold text-white mb-2">While you&apos;re reading this.</h2>
+        <p className="text-white/50 text-sm mb-6">Other parents already committed.</p>
+        <div className="space-y-3">
+          {[
+            { quote: "I committed to helping Aanya master Mathematics before her board exam.", city: "Mumbai", min: 4 },
+            { quote: "My son struggled with Science for 2 years. This year is different.", city: "Dhaka", min: 11 },
+            { quote: "Saanvi is going to pass her SEE exam. I made the commitment today.", city: "Kathmandu", min: 18 },
+          ].map((item, i) => (
+            <div key={i} className="backdrop-blur-lg bg-white/[0.03] border border-white/10 rounded-xl p-4 hover:border-white/20 transition-all duration-300">
+              <p className="text-white/70 text-sm italic leading-relaxed mb-2">&ldquo;{item.quote}&rdquo;</p>
+              <p className="text-white/30 text-xs">A parent from {item.city} · {item.min} minutes ago</p>
+            </div>
+          ))}
+        </div>
+      </Section>
+
+      {/* ═══════════════════════════════════════════════════════
+           SECTION: LEADERBOARD (from master prompt)
+           ═══════════════════════════════════════════════════════ */}
+      {stats?.leaders && stats.leaders.length > 0 && (
+        <Section id="leaderboard">
+          <h2 className="text-xl sm:text-2xl font-semibold text-white mb-2">Top Resistance</h2>
+          <p className="text-white/50 text-sm mb-6">Parents who brought the most families in.</p>
+          <div className="space-y-2">
+            {stats.leaders.map((leader, i) => (
+              <div key={i} className={`backdrop-blur-lg border rounded-xl p-3 sm:p-4 flex items-center gap-3 transition-all duration-300 hover:scale-[1.01] ${i === 0 ? "bg-red-500/[0.06] border-red-500/20" : "bg-white/[0.02] border-white/10"}`}>
+                <span className="text-lg font-bold text-red-400 min-w-[28px]">#{leader.rank}</span>
+                <span className="flex-1 text-sm text-white">{leader.firstName}{leader.city ? ` · ${leader.city}` : ""}</span>
+                <span className="text-xs text-white/40">{leader.referralCount} families</span>
+              </div>
+            ))}
+          </div>
+        </Section>
+      )}
+
+      {/* ═══════════════════════════════════════════════════════
+           SECTION: FOUNDER STORY (from master prompt)
+           ═══════════════════════════════════════════════════════ */}
+      <Section id="founder-story">
+        <p className="text-base sm:text-lg font-medium text-white leading-relaxed mb-4">
+          Prince, Rabindra, and Aditya grew up in Nepal without private tutors.
+        </p>
+        <p className="text-sm sm:text-base text-white/50 leading-relaxed mb-4">
+          They watched classmates with tutors consistently pass exams they failed — not because those classmates were smarter, but because someone was checking whether they actually understood the material, not just whether they&apos;d read it.
+        </p>
+        <p className="text-sm sm:text-base text-white/70 leading-relaxed mb-6">
+          They searched for an AI that could teach the way a real one-to-one tutor would. They couldn&apos;t find one. So they built it.
+        </p>
+        <div className="grid grid-cols-3 gap-3">
+          {[
+            { name: "Prince", role: "Co-founder", flag: "🇳🇵" },
+            { name: "Rabindra", role: "Co-founder", flag: "🇳🇵" },
+            { name: "Aditya", role: "Co-founder", flag: "🇳🇵" },
+          ].map(founder => (
+            <div key={founder.name} className="backdrop-blur-lg bg-white/[0.03] border border-white/10 rounded-xl p-3 sm:p-4 flex items-center gap-3 hover:border-white/20 transition-all">
+              <div className="w-9 h-9 rounded-full bg-gradient-to-br from-red-500/20 to-purple-500/20 border border-white/20 flex items-center justify-center text-sm font-bold text-red-400 flex-shrink-0">{founder.name[0]}</div>
+              <div>
+                <p className="text-sm font-medium text-white">{founder.name}</p>
+                <p className="text-[10px] text-white/40">{founder.role} {founder.flag}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </Section>
+
+      {/* ═══════════════════════════════════════════════════════
+           SECTION: BOTTOM CTA (from master prompt)
+           ═══════════════════════════════════════════════════════ */}
+      <Section id="bottom-cta">
+        {step === "form" ? (
+          <div className="backdrop-blur-xl bg-black/60 border border-white/20 rounded-2xl p-6 sm:p-8 text-center">
+            <h2 className="text-xl sm:text-2xl font-semibold text-white mb-2">Secure your spot.</h2>
+            <div className="inline-flex items-center gap-2 bg-red-500/[0.08] border border-red-500/20 rounded-lg px-4 py-2 mb-5">
+              <span className="text-red-400 text-sm font-medium">⚡ {stats?.spotsLeft ?? "~"} founding spots left — 60% off forever</span>
+            </div>
+            <form onSubmit={handleSubmit} className="space-y-3 max-w-sm mx-auto">
+              <Input type="text" placeholder="Your full name" value={name} onChange={(e) => setName(e.target.value)} required className="bg-black/40 border-white/20 text-white placeholder:text-white/50 focus:border-white/40 focus:ring-white/20 h-12 rounded-xl backdrop-blur-sm" />
+              <Input type="email" placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} required className="bg-black/40 border-white/20 text-white placeholder:text-white/50 focus:border-white/40 focus:ring-white/20 h-12 rounded-xl backdrop-blur-sm" />
+              <Button type="submit" disabled={formLoading} className="w-full h-12 bg-red-600 hover:bg-red-700 text-white font-medium rounded-xl transition-all">Join the Resistance →</Button>
+            </form>
+          </div>
+        ) : (
+          <div className="text-center backdrop-blur-xl bg-black/60 border border-white/20 rounded-2xl p-6">
+            <p className="text-white/50 text-sm mb-4">You&apos;re already in — Position #{signup?.position}</p>
+            <Button onClick={() => document.getElementById("waitlist")?.scrollIntoView({ behavior: "smooth" })} className="h-12 px-8 bg-red-600 hover:bg-red-700 text-white rounded-xl">Refer families to move up →</Button>
+          </div>
+        )}
       </Section>
 
       {/* ═══════════════════════════════════════════════════════
@@ -600,7 +775,7 @@ export function WaitlistExperience() {
                 <img src="/zorvai-logo.png" alt="Zorvai" className="w-full h-full object-cover" />
               </div>
               <div>
-                <h4 className="text-white text-sm font-semibold mb-1">Built by Rabindra & Prince</h4>
+                <h4 className="text-white text-sm font-semibold mb-1">Built by Rabindra, Prince & Aditya</h4>
                 <p className="text-white/40 text-xs leading-relaxed mb-3">We&apos;re building Zorvai because we believe every student deserves a tutor that actually checks understanding — not just gives answers. Reach out anytime. We respond personally.</p>
                 <div className="flex flex-wrap items-center gap-2 sm:gap-3">
                   <a href="https://www.linkedin.com/in/rabindra-shrestha-5079b03b5/" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 bg-[#0A66C2]/10 border border-[#0A66C2]/20 text-[#0A66C2] hover:bg-[#0A66C2]/20 hover:border-[#0A66C2]/30 px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-all">

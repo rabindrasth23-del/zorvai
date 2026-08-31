@@ -1,45 +1,39 @@
 /**
- * AI Provider Engine — OpenAI-Compatible Adapter
+ * AI Provider Engine — OpenAI Adapter
  *
- * Shared adapter for DeepSeek, Qwen, GLM, and Kimi.
- * All use the OpenAI wire format with custom baseURL and API key.
+ * Direct OpenAI API calls. No OpenRouter dependency.
+ * Used as a fallback provider when Claude and Gemini are both down.
  */
 
 import OpenAI from 'openai';
 import type { ProviderConfig } from '../config';
 import type { AdapterRequest, AdapterResponse } from './anthropic';
 
-// Cache one OpenAI client instance per provider to reuse connections
-const clientCache = new Map<string, OpenAI>();
+// Cache one OpenAI client instance to reuse connections
+let clientInstance: OpenAI | null = null;
 
 function getClient(provider: ProviderConfig): OpenAI {
-  const existing = clientCache.get(provider.id);
-  if (existing) return existing;
+  if (clientInstance) return clientInstance;
 
   const apiKey = process.env[provider.apiKeyEnv];
   if (!apiKey) {
     throw new Error(`${provider.apiKeyEnv} is not set for provider ${provider.name}`);
   }
 
-  if (!provider.baseUrl) {
-    throw new Error(`baseUrl is not configured for provider ${provider.name}`);
-  }
-
-  const client = new OpenAI({
+  clientInstance = new OpenAI({
     apiKey,
-    baseURL: provider.baseUrl,
+    baseURL: provider.baseUrl || 'https://api.openai.com/v1',
   });
 
-  clientCache.set(provider.id, client);
-  return client;
+  return clientInstance;
 }
 
 /**
- * Call an OpenAI-compatible provider (via OpenRouter).
- * Returns the raw text content from the provider's response.
- * Supports multimodal content (images/PDFs) when attachment is provided.
+ * Call OpenAI's API directly.
+ * Returns the raw text content from the response.
+ * Supports multimodal content (images) when attachment is provided.
  */
-export async function callOpenAICompatible(
+export async function callOpenAI(
   request: AdapterRequest
 ): Promise<AdapterResponse> {
   const client = getClient(request.provider);
@@ -50,11 +44,10 @@ export async function callOpenAICompatible(
   let userContent: any = request.userMessage;
 
   if (request.attachment) {
-    const { base64, mimeType, filename } = request.attachment;
+    const { base64, mimeType } = request.attachment;
     const isImage = mimeType.startsWith('image/');
 
     if (isImage) {
-      // Images: use image_url content part with base64 data URL
       userContent = [
         { type: 'text', text: request.userMessage },
         {
@@ -65,16 +58,9 @@ export async function callOpenAICompatible(
         },
       ];
     } else {
-      // PDFs/documents: use OpenRouter's file content part
+      // For non-image files, include as text context
       userContent = [
-        { type: 'text', text: request.userMessage },
-        {
-          type: 'file',
-          file: {
-            filename,
-            file_data: `data:${mimeType};base64,${base64}`,
-          },
-        },
+        { type: 'text', text: `${request.userMessage}\n\n[Attached file: ${request.attachment.filename}]` },
       ];
     }
   }
