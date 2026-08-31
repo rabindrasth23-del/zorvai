@@ -262,7 +262,7 @@ export function WaitlistExperience() {
     try {
       const res = await fetch("/api/waitlist/join", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name, email, childName: childName.trim() || null, countryCode: country, role, referredBy }) });
       const data = await res.json();
-      if (data.ok || data.referralCode) { setSignup(data); if (data.childName) setChildName(data.childName); setStep("commitment"); window.scrollTo({ top: 0, behavior: "smooth" }); }
+      if (data.ok || data.referralCode) { setSignup(data); if (data.childName) setChildName(data.childName); setStep("commitment"); setTimeout(() => document.getElementById("waitlist")?.scrollIntoView({ behavior: "smooth", block: "start" }), 100); }
     } catch {} finally { setFormLoading(false); }
   };
 
@@ -281,13 +281,13 @@ export function WaitlistExperience() {
         commitmentText,
         signatureDataUrl,
       }) });
-    } catch {} finally { setCommitLoading(false); setStep("pricing"); window.scrollTo({ top: 0, behavior: "smooth" }); }
+    } catch {} finally { setCommitLoading(false); setStep("pricing"); setTimeout(() => document.getElementById("waitlist")?.scrollIntoView({ behavior: "smooth", block: "start" }), 100); }
   };
 
   const handlePricingProceed = async (planId: string | null) => {
     setStep("share");
     setCardLoading(true);
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    setTimeout(() => document.getElementById("waitlist")?.scrollIntoView({ behavior: "smooth", block: "start" }), 100);
     const plan = planId ? PLANS.find(p => p.id === planId) : null;
     // Save chosen plan
     if (planId && plan) {
@@ -563,7 +563,7 @@ export function WaitlistExperience() {
                     {(!hasSignature || !commitGoal.trim()) && (
                       <p className="text-[10px] text-white/20 text-center mt-2">{!hasSignature ? "Add your signature above to continue" : "Fill in subject and goal to continue"}</p>
                     )}
-                    <button onClick={() => { setStep("pricing"); window.scrollTo({ top: 0, behavior: "smooth" }); }} className="text-[11px] text-white/20 hover:text-white/40 transition-colors mt-2 block mx-auto">Skip for now</button>
+                    <button onClick={() => { setStep("pricing"); setTimeout(() => document.getElementById("waitlist")?.scrollIntoView({ behavior: "smooth", block: "start" }), 100); }} className="text-[11px] text-white/20 hover:text-white/40 transition-colors mt-2 block mx-auto">Skip for now</button>
                   </div>
                 )}
 
