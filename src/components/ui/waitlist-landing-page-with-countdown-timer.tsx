@@ -51,9 +51,9 @@ const COUNTRIES = [
 const SUBJECTS = ["Mathematics", "Science", "English", "Biology", "Chemistry", "Physics", "History", "Geography", "All subjects"];
 
 const PLANS = [
-  { id: "weekly", name: "Weekly", original: "$12.99/week", price: "$5.19/week", priceNum: "5.19", saving: "Save 60%", description: "Try it for a week", badge: null },
-  { id: "monthly", name: "Monthly", original: "$49/month", price: "$19/month", priceNum: "19", saving: "60% off forever", description: "Best for most families", badge: "Most popular" },
-  { id: "annual", name: "Annual", original: "$299/year", price: "$119/year", priceNum: "9.99", saving: "Under $10/month", description: "Best value — 2 months free", badge: "Best value" },
+  { id: "weekly", stripeId: "student_solo_monthly", name: "Weekly", original: "$12.99/week", price: "$5.19/week", priceNum: "5.19", saving: "Save 60%", description: "Try it for a week", badge: null },
+  { id: "monthly", stripeId: "family_monthly", name: "Monthly", original: "$49/month", price: "$19/month", priceNum: "19", saving: "60% off forever", description: "Best for most families", badge: "Most popular" },
+  { id: "annual", stripeId: "family_annual", name: "Annual", original: "$299/year", price: "$119/year", priceNum: "9.99", saving: "Under $10/month", description: "Best value — 2 months free", badge: "Best value" },
 ];
 
 const FAQS = [
@@ -170,6 +170,7 @@ export function WaitlistExperience() {
   // Share card state
   const [cardImageUrl, setCardImageUrl] = useState<string | null>(null);
   const [cardLoading, setCardLoading] = useState(false);
+  const [paymentLoading, setPaymentLoading] = useState(false);
 
   const timeLeft = useCountdown(LAUNCH_DATE);
 
@@ -284,15 +285,30 @@ export function WaitlistExperience() {
     } catch {} finally { setCommitLoading(false); setStep("pricing"); setTimeout(() => document.getElementById("waitlist")?.scrollIntoView({ behavior: "smooth", block: "start" }), 100); }
   };
 
-  const handlePricingProceed = async (planId: string | null) => {
+  const handleStripeCheckout = async () => {
+    const plan = PLANS.find(p => p.id === selectedPlan);
+    if (!plan) return;
+    setPaymentLoading(true);
+    try {
+      // Save chosen plan
+      await fetch("/api/waitlist/commitment", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email, chosenPlan: plan.id, planPriceUsd: plan.priceNum, planOriginalPrice: plan.original }) });
+      // Create Stripe checkout session
+      const res = await fetch("/api/waitlist/payment/intent", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email, planId: plan.stripeId }) });
+      const data = await res.json();
+      if (data.checkoutUrl) {
+        window.location.href = data.checkoutUrl;
+        return;
+      }
+    } catch {}
+    setPaymentLoading(false);
+    // If Stripe fails, fall through to share step
+    goToShareStep(PLANS.find(p => p.id === selectedPlan) || null);
+  };
+
+  const goToShareStep = async (plan: typeof PLANS[number] | null) => {
     setStep("share");
     setCardLoading(true);
     setTimeout(() => document.getElementById("waitlist")?.scrollIntoView({ behavior: "smooth", block: "start" }), 100);
-    const plan = planId ? PLANS.find(p => p.id === planId) : null;
-    // Save chosen plan
-    if (planId && plan) {
-      try { await fetch("/api/waitlist/commitment", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email, chosenPlan: planId, planPriceUsd: plan.priceNum, planOriginalPrice: plan.original }) }); } catch {}
-    }
     // Generate Gemini image
     try {
       const res = await fetch("/api/waitlist/image", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ referralCode: signup?.referralCode, childName: childName || signup?.childName, subject: commitSubject, goal: commitGoal, plan: plan ? `${plan.name} — ${plan.price} · 60% off forever` : "Founding Member" }) });
@@ -301,6 +317,10 @@ export function WaitlistExperience() {
       else if (data.imageUrl) setCardImageUrl(data.imageUrl);
     } catch {}
     setCardLoading(false);
+  };
+
+  const handleSkipPayment = () => {
+    goToShareStep(null);
   };
 
   const handleCopy = () => { if (!signup) return; navigator.clipboard.writeText(`https://zorvai.ca/waitlist?ref=${signup.referralCode}`); setCopied(true); setTimeout(() => setCopied(false), 2000); };
@@ -596,10 +616,11 @@ export function WaitlistExperience() {
 
                     <p className="text-[10px] text-white/20 mb-4">🔒 60% off is locked in forever for founding members. Regular price returns after 500 signups.</p>
 
-                    <button onClick={() => handlePricingProceed(selectedPlan)} className="w-full h-12 bg-red-600 hover:bg-red-700 text-white font-medium rounded-xl transition-all duration-300 hover:shadow-lg hover:shadow-red-500/25 text-sm">
-                      Get started for {PLANS.find(p => p.id === selectedPlan)?.price} →
+                    <button onClick={handleStripeCheckout} disabled={paymentLoading} className="w-full h-12 bg-red-600 hover:bg-red-700 text-white font-medium rounded-xl transition-all duration-300 hover:shadow-lg hover:shadow-red-500/25 text-sm disabled:opacity-50">
+                      {paymentLoading ? "Redirecting to payment..." : `Lock in ${PLANS.find(p => p.id === selectedPlan)?.price} — Pay now →`}
                     </button>
-                    <button onClick={() => handlePricingProceed(null)} className="text-[11px] text-white/20 hover:text-white/40 transition-colors mt-2 block mx-auto">Not ready to pay — stay on free waitlist</button>
+                    <p className="text-[10px] text-white/20 mt-2 mb-2">💳 Secure checkout by Stripe. Cancel anytime before launch for full refund.</p>
+                    <button onClick={handleSkipPayment} className="text-[11px] text-white/20 hover:text-white/40 transition-colors block mx-auto">Not ready to pay — stay on free waitlist</button>
                   </div>
                 )}
 
