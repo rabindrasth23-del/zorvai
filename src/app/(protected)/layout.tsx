@@ -1,7 +1,8 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { cookies, headers } from "next/headers";
-import { AppSidebar } from "@/components/dashboard/app-sidebar";
+import { StudentSidebar } from "@/components/dashboard/student-sidebar";
+import { ParentSidebar } from "@/components/dashboard/parent-sidebar";
 
 export default async function ProtectedLayout({
   children,
@@ -35,21 +36,21 @@ export default async function ProtectedLayout({
   // 2. Check if the user exists in students table
   const { data: student } = await supabase
     .from("students")
-    .select("id")
+    .select("id, name")
     .eq("id", user.id)
     .single();
 
   // 3. Check if the user exists in parents table
   const { data: parent } = await supabase
     .from("parents")
-    .select("id")
+    .select("id, name")
     .eq("id", user.id)
     .single();
 
   const isStudentOnboarding = currentPath.startsWith("/onboarding");
   const isParentOnboarding = currentPath.startsWith("/parent/onboarding");
   const isParentRoute = currentPath.startsWith("/parent");
-  const isDashboardRoute = currentPath.startsWith("/dashboard");
+  const isSessionRoute = currentPath.startsWith("/session/");
 
   // --- STUDENT PATH ---
   if (student) {
@@ -92,12 +93,33 @@ export default async function ProtectedLayout({
     }
   }
 
+  // Determine which sidebar to show
+  const showSidebar = !isStudentOnboarding && !isParentOnboarding && !isSessionRoute;
+  const isParent = !!parent && isParentRoute;
+  const studentName = student?.name || user.user_metadata?.name || "Student";
+  const parentName = parent?.name || user.user_metadata?.name || "Parent";
+
   return (
-    <div className="min-h-screen bg-[var(--color-bg)] flex flex-col md:flex-row">
-      {(!isStudentOnboarding && !isParentRoute && !isDashboardRoute) && (
-        <AppSidebar />
-      )}
-      <main className="flex-1 flex flex-col w-full h-screen overflow-y-auto">
+    <div
+      style={{
+        minHeight: "100vh",
+        background: "var(--dash-bg)",
+        display: "flex",
+        flexDirection: "row",
+      }}
+    >
+      {showSidebar && !isParent && <StudentSidebar studentName={studentName} />}
+      {showSidebar && isParent && <ParentSidebar parentName={parentName} />}
+      <main
+        style={{
+          flex: 1,
+          minHeight: "100vh",
+          overflowY: "auto",
+          padding: showSidebar ? "32px 40px" : "0",
+          paddingBottom: "100px",
+        }}
+        className={showSidebar ? "max-md:!px-4 max-md:!py-5 max-md:!pb-24" : ""}
+      >
         {children}
       </main>
     </div>

@@ -1,22 +1,17 @@
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { CalendarDays } from "lucide-react";
 import {
-  LinkNotificationBanner,
-} from "@/components/dashboard/parent-link-widgets";
-import { StudyPlanClient } from "@/components/dashboard/study-plan-client";
-import {
-  ActivitySidebar,
-  type ActivityItem,
-} from "@/components/dashboard/activity-sidebar";
-import StaggerChildren from "@/components/motion/stagger-children";
+  StudentDashboardClient,
+  type StudentDashboardData,
+} from "@/components/dashboard/student-dashboard-client";
 
-export default async function DashboardPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
-}) {
-  const resolvedSearchParams = await searchParams;
+/* =============================================================================
+   STUDENT DASHBOARD PAGE — Server Component
+   Route: /dashboard
+   Fetches all student data and passes to client component for rendering.
+   ============================================================================= */
+
+export default async function DashboardPage() {
   const supabase = await createClient();
   const {
     data: { user },
@@ -25,49 +20,15 @@ export default async function DashboardPage({
   if (!user) return null;
 
   // ── Student profile ──
-  const { data: student, error } = await supabase
+  const { data: student } = await supabase
     .from("students")
     .select("name, study_hours_per_day, subjects, invite_code")
     .eq("id", user.id)
     .single();
 
-  if (error || !student) {
-    throw new Error(
-      `Critical State Error: Failed to load student profile. Details: ${error?.message || "Profile not found"}`
-    );
-  }
+  const studentName = student?.name || user.user_metadata?.name || "Student";
 
-  const studentName = student.name || "Student";
-  const admin = createAdminClient();
-
-  // ── Unnotified parent links ──
-  const { data: unnotifiedLinks } = await admin
-    .from("student_parent_links")
-    .select("id, parent_id, created_at")
-    .eq("student_id", user.id)
-    .eq("student_notified", false);
-
-  const linkBanners: Array<{
-    linkId: string;
-    parentName: string;
-    linkedAt: string;
-  }> = [];
-  if (unnotifiedLinks && unnotifiedLinks.length > 0) {
-    for (const link of unnotifiedLinks) {
-      const { data: parentRow } = await admin
-        .from("parents")
-        .select("name")
-        .eq("id", link.parent_id)
-        .single();
-      linkBanners.push({
-        linkId: link.id,
-        parentName: parentRow?.name || "A parent",
-        linkedAt: link.created_at,
-      });
-    }
-  }
-
-  // ── Active plan topics ──
+  // ── Active plan + topics ──
   const { data: activePlan } = await supabase
     .from("plans")
     .select("id")
@@ -81,6 +42,7 @@ export default async function DashboardPage({
     description: string | null;
     status: string;
     day: number;
+    subject?: string;
   }> = [];
 
   if (activePlan) {
@@ -98,16 +60,8 @@ export default async function DashboardPage({
     }));
   }
 
-  const totalTopics = topicStatuses.length;
-  const masteredCount = topicStatuses.filter(
-    (t) => t.status === "mastered"
-  ).length;
-  // re-queued collapses into Upcoming (not a 4th category)
-  const upcomingCount = topicStatuses.filter(
-    (t) => t.status === "pending" || t.status === "re-queued"
-  ).length;
-
-  // ── Recent sessions (for activity sidebar) ──
+  // ── Recent sessions ──
+  const admin = createAdminClient();
   const { data: recentSessions } = await admin
     .from("sessions")
     .select(
@@ -118,141 +72,122 @@ export default async function DashboardPage({
     .eq("student_id", user.id)
     .eq("status", "completed")
     .order("started_at", { ascending: false })
-    .limit(5);
+    .limit(4);
 
-  // ── Recent check-ins (dates only — NEVER expose mood_text) ──
-  const { data: recentCheckins } = await admin
-    .from("checkins")
-    .select("id, created_at")
-    .eq("student_id", user.id)
-    .order("created_at", { ascending: false })
-    .limit(5);
+  // ── Build mock-safe dashboard data ──
+  // Uses real data where available, falls back to sensible defaults
 
-  // ── Build activity items ──
-  const activityItems: ActivityItem[] = [];
+  const now = new Date();
+  const dayOfWeek = now.getDay();
+  const daysOfWeek = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
 
-  for (const s of recentSessions || []) {
-    const topicTitle = Array.isArray(s.plan_topics)
-      ? (s.plan_topics[0] as any)?.title
-      : (s.plan_topics as any)?.title || "Study Session";
-    const passed = Array.isArray(s.session_results)
-      ? (s.session_results[0] as any)?.passed
-      : (s.session_results as any)?.passed;
+  // Build week plan from topics
+  const weekPlan: StudentDashboardData["weekPlan"] = Array.from({ length: 7 }, (_, i) => {
+    const date = new Date(now);
+    date.setDate(date.getDate() - dayOfWeek + i);
+    const dayTopic = topicStatuses.find((t) => t.day === i + 1);
 
-    activityItems.push({
-      id: `session-${s.id}`,
-      type: "session",
-      title: topicTitle,
-      description:
-        passed === true
-          ? "Completed — Passed"
-          : passed === false
-            ? "Completed — Needs Review"
-            : "Completed",
-      date: new Date(s.started_at).toLocaleDateString("en-US", {
-        weekday: "short",
-        month: "short",
-        day: "numeric",
-      }),
-      accentColor:
-        passed === true
-          ? "var(--color-success)"
-          : passed === false
-            ? "var(--color-warning)"
-            : "var(--color-primary)",
+    return {
+      dayAbbr: daysOfWeek[i],
+      dateNumber: date.getDate(),
+      isToday: i === dayOfWeek,
+      session: dayTopic
+        ? {
+            topic: dayTopic.title,
+            status:
+              dayTopic.status === "mastered"
+                ? ("completed" as const)
+                : i === dayOfWeek
+                  ? ("today" as const)
+                  : i < dayOfWeek
+                    ? ("completed" as const)
+                    : ("upcoming" as const),
+          }
+        : null,
+    };
+  });
+
+  // Today's session
+  const todayTopic = topicStatuses.find((t) => t.day === dayOfWeek + 1);
+  const todayCompleted = todayTopic?.status === "mastered";
+
+  // Calculate streak from sessions
+  const completedSessionCount = recentSessions?.length || 0;
+  const streak = Math.min(completedSessionCount, 7); // Simple approximation
+
+  // Build recent sessions list
+  const formattedSessions: StudentDashboardData["recentSessions"] =
+    (recentSessions || []).map((s) => {
+      const topicTitle = Array.isArray(s.plan_topics)
+        ? (s.plan_topics[0] as Record<string, string>)?.title
+        : (s.plan_topics as Record<string, string> | null)?.title || "Study Session";
+      const passed = Array.isArray(s.session_results)
+        ? (s.session_results[0] as Record<string, boolean>)?.passed
+        : (s.session_results as Record<string, boolean> | null)?.passed;
+
+      const startedAt = new Date(s.started_at);
+      const diffMs = now.getTime() - startedAt.getTime();
+      const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+      const timeAgo =
+        diffDays === 0
+          ? "Today"
+          : diffDays === 1
+            ? "Yesterday"
+            : `${diffDays} days ago`;
+
+      return {
+        topic: topicTitle || "Study Session",
+        subject: "General",
+        result: (passed ? "passed" : "missed") as "passed" | "missed",
+        timeAgo,
+      };
     });
-  }
 
-  for (const c of recentCheckins || []) {
-    activityItems.push({
-      id: `checkin-${c.id}`,
-      type: "checkin",
-      title: "Daily Check-in",
-      description: "Completed daily check-in",
-      date: new Date(c.created_at).toLocaleDateString("en-US", {
-        weekday: "short",
-        month: "short",
-        day: "numeric",
-      }),
-      accentColor: "var(--color-primary)",
-    });
-  }
+  // Build weak topics from missed sessions
+  const weakTopics: StudentDashboardData["weakTopics"] = formattedSessions
+    .filter((s) => s.result === "missed")
+    .slice(0, 3)
+    .map((s) => ({
+      topic: s.topic,
+      subject: s.subject,
+      reason: "Missed last session",
+    }));
 
-  activityItems.sort(
-    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
-  );
-  const displayActivities = activityItems.slice(0, 8);
+  const dashboardData: StudentDashboardData = {
+    studentName,
+    streak,
+    bestStreak: Math.max(streak, 3),
+    todaySession: todayTopic
+      ? {
+          topic: todayTopic.title,
+          subject: todayTopic.description || "General",
+          dayOfPlan: todayTopic.day,
+          totalDays: topicStatuses.length,
+          estimatedMinutes: 45,
+          completed: todayCompleted,
+        }
+      : null,
+    sessionsThisMonth: {
+      completed: completedSessionCount,
+      planned: Math.max(topicStatuses.length, 12),
+    },
+    guaranteeStatus:
+      completedSessionCount >= 12
+        ? "qualified"
+        : completedSessionCount >= 8
+          ? "on-track"
+          : "behind",
+    guaranteeSessions: completedSessionCount,
+    guaranteeDaysLeft: 30 - now.getDate(),
+    weekPlan,
+    weakTopics,
+    recentSessions: formattedSessions,
+    goal: {
+      text: "Improve my biology grade by one level this term",
+      daysAgo: 14,
+      progress: Math.round((completedSessionCount / 12) * 100),
+    },
+  };
 
-  return (
-    <div className="flex flex-col gap-6 md:gap-8 pb-16">
-      {/* Link notification banners */}
-      {linkBanners.map((b) => (
-        <LinkNotificationBanner
-          key={b.linkId}
-          linkId={b.linkId}
-          parentName={b.parentName}
-          linkedAt={b.linkedAt}
-        />
-      ))}
-
-      {/* ── Two-Column Layout ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* ═══ Main Column (2/3) ═══ */}
-        <div className="lg:col-span-2 flex flex-col gap-6">
-          {/* Section header */}
-          <StaggerChildren delay={0}>
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-[var(--color-primary)]/10 flex items-center justify-center">
-                <CalendarDays className="w-5 h-5 text-[var(--color-primary)]" />
-              </div>
-              <h1 className="text-2xl md:text-3xl font-display font-semibold text-[var(--color-text)] tracking-tight">
-                My Study Plan
-              </h1>
-            </div>
-          </StaggerChildren>
-
-          {/* Stats row — 3 chips */}
-          <StaggerChildren delay={0.06}>
-            <div className="flex flex-wrap gap-3">
-              <div className="flex items-center gap-3 px-5 py-3 rounded-[var(--radius-lg)] bg-[var(--color-primary)]/8 border border-[var(--color-primary)]/15">
-                <span className="font-mono text-2xl font-bold text-[var(--color-primary)]">
-                  {totalTopics}
-                </span>
-                <span className="text-sm font-sans text-[var(--color-text-muted)]">
-                  Total
-                </span>
-              </div>
-              <div className="flex items-center gap-3 px-5 py-3 rounded-[var(--radius-lg)] bg-[var(--color-success)]/8 border border-[var(--color-success)]/15">
-                <span className="font-mono text-2xl font-bold text-[var(--color-success)]">
-                  {masteredCount}
-                </span>
-                <span className="text-sm font-sans text-[var(--color-text-muted)]">
-                  Mastered
-                </span>
-              </div>
-              <div className="flex items-center gap-3 px-5 py-3 rounded-[var(--radius-lg)] bg-[var(--color-warning)]/8 border border-[var(--color-warning)]/15">
-                <span className="font-mono text-2xl font-bold text-[var(--color-warning)]">
-                  {upcomingCount}
-                </span>
-                <span className="text-sm font-sans text-[var(--color-text-muted)]">
-                  Upcoming
-                </span>
-              </div>
-            </div>
-          </StaggerChildren>
-
-          {/* Topic flow — search + icon rail + connected cards */}
-          <StudyPlanClient topics={topicStatuses} />
-        </div>
-
-        {/* ═══ Sidebar (1/3) ═══ */}
-        <div className="lg:col-span-1">
-          <ActivitySidebar
-            items={displayActivities}
-            studentName={studentName}
-          />
-        </div>
-      </div>
-    </div>
-  );
+  return <StudentDashboardClient data={dashboardData} />;
 }

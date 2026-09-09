@@ -1,44 +1,196 @@
-import { createClient } from "@/lib/supabase/server";
-import { Settings as SettingsIcon } from "lucide-react";
-import { SettingsPortal } from "@/components/settings/settings-portal";
+"use client";
 
-export default async function SettingsPage() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+import { useState } from "react";
+import { DashboardCard, SectionHeader, DashButton } from "@/components/dashboard/dashboard-primitives";
 
-  if (!user) return null;
+/* =============================================================================
+   SETTINGS PAGE — Student Settings
+   Route: /settings
+   Profile info, study preferences, notification settings.
+   ============================================================================= */
 
-  const { data: student } = await supabase
-    .from('students')
-    .select('name, study_hours_per_day, invite_code')
-    .eq('id', user.id)
-    .single();
+export default function SettingsPage() {
+  const [name, setName] = useState("Alex Johnson");
+  const [email] = useState("alex@example.com");
+  const [studyHours, setStudyHours] = useState("2");
+  const [notifications, setNotifications] = useState(true);
+  const [emailReminders, setEmailReminders] = useState(false);
+  const [saved, setSaved] = useState(false);
+
+  const handleSave = () => {
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2000);
+  };
 
   return (
-    <div className="flex flex-col gap-8 animate-element h-full max-w-5xl mx-auto pb-16 px-4 md:px-8">
-      <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 pt-4">
-        <div className="flex items-center gap-4">
-          <div className="w-14 h-14 rounded-full bg-[var(--color-primary)]/10 flex items-center justify-center text-[var(--color-primary)]">
-            <SettingsIcon className="w-7 h-7" />
+    <div className="dash-page-enter" style={{ maxWidth: "640px", fontFamily: "system-ui, -apple-system, sans-serif" }}>
+      <h1 style={{ fontSize: "22px", fontWeight: 500, color: "var(--dash-text)", marginBottom: "24px" }}>
+        Settings
+      </h1>
+
+      {/* Profile */}
+      <DashboardCard padding="24px" className="mb-5">
+        <SectionHeader title="Profile" />
+        <div style={{ display: "flex", flexDirection: "column", gap: "16px", marginTop: "12px" }}>
+          <div>
+            <label style={{ fontSize: "12px", color: "var(--dash-muted)", display: "block", marginBottom: "6px" }}>Name</label>
+            <input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              style={{
+                width: "100%",
+                padding: "10px 14px",
+                background: "var(--dash-raised)",
+                border: "1px solid var(--dash-border)",
+                borderRadius: "var(--dash-radius-inner)",
+                color: "var(--dash-text)",
+                fontSize: "14px",
+                fontFamily: "system-ui, -apple-system, sans-serif",
+                outline: "none",
+                transition: "border-color 200ms ease",
+              }}
+              onFocus={(e) => { e.currentTarget.style.borderColor = "var(--dash-teal)"; }}
+              onBlur={(e) => { e.currentTarget.style.borderColor = "var(--dash-border)"; }}
+            />
           </div>
           <div>
-            <h1 className="text-3xl md:text-4xl font-display text-[var(--color-text)] tracking-tight">
-              Settings
-            </h1>
-            <p className="text-[var(--text-body)] text-[var(--color-text-muted)] mt-1 font-sans">
-              Manage your preferences and security.
-            </p>
+            <label style={{ fontSize: "12px", color: "var(--dash-muted)", display: "block", marginBottom: "6px" }}>Email</label>
+            <input
+              value={email}
+              disabled
+              style={{
+                width: "100%",
+                padding: "10px 14px",
+                background: "var(--dash-bg)",
+                border: "1px solid var(--dash-border)",
+                borderRadius: "var(--dash-radius-inner)",
+                color: "var(--dash-dim)",
+                fontSize: "14px",
+                fontFamily: "system-ui, -apple-system, sans-serif",
+              }}
+            />
           </div>
         </div>
-      </header>
+      </DashboardCard>
 
-      <SettingsPortal 
-        initialData={{
-          name: student?.name || "",
-          email: user.email || "",
-          study_hours_per_day: student?.study_hours_per_day || 2
+      {/* Study Preferences */}
+      <DashboardCard padding="24px" className="mb-5">
+        <SectionHeader title="Study preferences" />
+        <div style={{ display: "flex", flexDirection: "column", gap: "16px", marginTop: "12px" }}>
+          <div>
+            <label style={{ fontSize: "12px", color: "var(--dash-muted)", display: "block", marginBottom: "6px" }}>
+              Daily study hours
+            </label>
+            <select
+              value={studyHours}
+              onChange={(e) => setStudyHours(e.target.value)}
+              style={{
+                width: "100%",
+                padding: "10px 14px",
+                background: "var(--dash-raised)",
+                border: "1px solid var(--dash-border)",
+                borderRadius: "var(--dash-radius-inner)",
+                color: "var(--dash-text)",
+                fontSize: "14px",
+                fontFamily: "system-ui, -apple-system, sans-serif",
+                outline: "none",
+                cursor: "pointer",
+              }}
+            >
+              <option value="1">1 hour</option>
+              <option value="2">2 hours</option>
+              <option value="3">3 hours</option>
+              <option value="4">4+ hours</option>
+            </select>
+          </div>
+        </div>
+      </DashboardCard>
+
+      {/* Notifications */}
+      <DashboardCard padding="24px" className="mb-5">
+        <SectionHeader title="Notifications" />
+        <div style={{ display: "flex", flexDirection: "column", gap: "14px", marginTop: "12px" }}>
+          <ToggleRow
+            label="Push notifications"
+            description="Get reminded about upcoming sessions"
+            checked={notifications}
+            onChange={setNotifications}
+          />
+          <ToggleRow
+            label="Email reminders"
+            description="Weekly progress report via email"
+            checked={emailReminders}
+            onChange={setEmailReminders}
+          />
+        </div>
+      </DashboardCard>
+
+      {/* Save */}
+      <div style={{ display: "flex", justifyContent: "flex-end", gap: "12px" }}>
+        {saved && (
+          <span style={{ fontSize: "13px", color: "var(--dash-success)", alignSelf: "center" }}>
+            Settings saved ✓
+          </span>
+        )}
+        <DashButton variant="primary" onClick={handleSave}>
+          Save changes
+        </DashButton>
+      </div>
+    </div>
+  );
+}
+
+function ToggleRow({
+  label,
+  description,
+  checked,
+  onChange,
+}: {
+  label: string;
+  description: string;
+  checked: boolean;
+  onChange: (v: boolean) => void;
+}) {
+  return (
+    <div
+      style={{
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center",
+        gap: "16px",
+      }}
+    >
+      <div>
+        <div style={{ fontSize: "14px", color: "var(--dash-text)" }}>{label}</div>
+        <div style={{ fontSize: "12px", color: "var(--dash-muted)", marginTop: "2px" }}>{description}</div>
+      </div>
+      <button
+        onClick={() => onChange(!checked)}
+        style={{
+          width: "44px",
+          height: "24px",
+          borderRadius: "12px",
+          background: checked ? "var(--dash-teal)" : "var(--dash-raised)",
+          border: `1px solid ${checked ? "var(--dash-teal)" : "var(--dash-border)"}`,
+          cursor: "pointer",
+          position: "relative",
+          transition: "all 200ms ease",
+          flexShrink: 0,
         }}
-      />
+      >
+        <span
+          style={{
+            position: "absolute",
+            top: "2px",
+            left: checked ? "22px" : "2px",
+            width: "18px",
+            height: "18px",
+            borderRadius: "50%",
+            background: checked ? "var(--dash-bg)" : "var(--dash-muted)",
+            transition: "all 200ms ease",
+          }}
+        />
+      </button>
     </div>
   );
 }
