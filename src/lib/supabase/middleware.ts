@@ -52,7 +52,14 @@ export async function updateSession(request: NextRequest) {
                       
   const isProtectedRoute = request.nextUrl.pathname.startsWith('/dashboard') || 
                            request.nextUrl.pathname.startsWith('/onboarding') ||
-                           request.nextUrl.pathname.startsWith('/checkin');
+                           request.nextUrl.pathname.startsWith('/checkin') ||
+                           request.nextUrl.pathname.startsWith('/admin') ||
+                           request.nextUrl.pathname.startsWith('/session') ||
+                           request.nextUrl.pathname.startsWith('/plan') ||
+                           request.nextUrl.pathname.startsWith('/progress') ||
+                           request.nextUrl.pathname.startsWith('/settings') ||
+                           request.nextUrl.pathname.startsWith('/chat') ||
+                           request.nextUrl.pathname.startsWith('/parent');
 
   const isUpdatePasswordRoute = request.nextUrl.pathname.startsWith('/update-password');
 
