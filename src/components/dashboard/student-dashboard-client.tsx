@@ -708,6 +708,56 @@ export function StudentDashboardClient({ data }: { data: StudentDashboardData })
         />
       </div>
 
+      {/* Section 3.5 — Quick Actions (v4 features) */}
+      <div className="dash-animate-on-scroll" style={{ marginBottom: "20px" }}>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(4, 1fr)",
+            gap: "10px",
+          }}
+        >
+          {[
+            { href: "/materials", emoji: "📚", label: "Material Library", color: "var(--dash-teal)" },
+            { href: "/mock-exam", emoji: "📝", label: "Mock Exam", color: "var(--dash-amber)" },
+            { href: "/review", emoji: "🔄", label: "Review Deck", color: "var(--dash-success)" },
+            { href: "/solve", emoji: "📷", label: "Snap & Solve", color: "var(--dash-danger)" },
+          ].map((item) => (
+            <Link key={item.href} href={item.href} style={{ textDecoration: "none" }}>
+              <div
+                style={{
+                  background: "var(--dash-surface)",
+                  border: "1px solid var(--dash-border)",
+                  borderRadius: "var(--dash-radius-card)",
+                  padding: "16px 12px",
+                  textAlign: "center",
+                  cursor: "pointer",
+                  transition: "border-color 200ms, box-shadow 200ms",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = item.color;
+                  e.currentTarget.style.boxShadow = `0 2px 8px ${item.color}18`;
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = "var(--dash-border)";
+                  e.currentTarget.style.boxShadow = "none";
+                }}
+              >
+                <div style={{ fontSize: "24px", marginBottom: "6px" }}>{item.emoji}</div>
+                <div style={{
+                  fontSize: "12px",
+                  fontWeight: 500,
+                  color: "var(--dash-text)",
+                  fontFamily: "system-ui, -apple-system, sans-serif",
+                }}>
+                  {item.label}
+                </div>
+              </div>
+            </Link>
+          ))}
+        </div>
+      </div>
+
       {/* Section 4 — Weekly Plan */}
       <div className="dash-animate-on-scroll" style={{ marginBottom: "28px" }}>
         <DashboardCard padding="18px 20px">

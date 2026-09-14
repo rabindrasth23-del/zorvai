@@ -23,6 +23,7 @@ export default function ChatPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputText, setInputText] = useState("");
   const [isTyping, setIsTyping] = useState(false);
+  const [solveMode, setSolveMode] = useState<"chat" | "hint" | "full">("chat");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
@@ -41,6 +42,7 @@ export default function ChatPage() {
     if (topic) {
       handleSend(`Explain ${topic}`);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleSend = async (text?: string) => {
@@ -57,17 +59,59 @@ export default function ChatPage() {
     setInputText("");
     setIsTyping(true);
 
-    // Simulate AI response
-    setTimeout(() => {
-      const aiMsg: Message = {
-        id: `msg-${Date.now()}-ai`,
+    try {
+      // Use solve API for hint/full modes, chat API for regular chat
+      if (solveMode !== "chat") {
+        const res = await fetch("/api/solve", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            ocrText: messageText,
+            mode: solveMode === "hint" ? "hint" : "full",
+          }),
+        });
+        const data = await res.json();
+        const aiMsg: Message = {
+          id: `msg-${Date.now()}-ai`,
+          role: "ai",
+          content: data.error
+            ? `Sorry, I couldn't solve that: ${data.error}`
+            : formatSolveResponse(data),
+          timestamp: new Date(),
+        };
+        setMessages((prev) => [...prev, aiMsg]);
+      } else {
+        const res = await fetch("/api/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            message: messageText,
+            history: messages.slice(-10).map((m) => ({
+              role: m.role === "student" ? "user" : "assistant",
+              content: m.content,
+            })),
+          }),
+        });
+        const data = await res.json();
+        const aiMsg: Message = {
+          id: `msg-${Date.now()}-ai`,
+          role: "ai",
+          content: data.error ? `Sorry, something went wrong.` : data.response,
+          timestamp: new Date(),
+        };
+        setMessages((prev) => [...prev, aiMsg]);
+      }
+    } catch {
+      const errorMsg: Message = {
+        id: `msg-${Date.now()}-err`,
         role: "ai",
-        content: getSimulatedResponse(messageText),
+        content: "Connection issue — please try again.",
         timestamp: new Date(),
       };
-      setMessages((prev) => [...prev, aiMsg]);
+      setMessages((prev) => [...prev, errorMsg]);
+    } finally {
       setIsTyping(false);
-    }, 1500);
+    }
   };
 
   const suggestedChips = [
@@ -347,46 +391,83 @@ export default function ChatPage() {
         <div
           style={{
             flex: 1,
-            background: "var(--dash-surface)",
-            border: "1px solid var(--dash-border)",
-            borderRadius: "24px",
-            padding: "12px 18px",
             display: "flex",
-            alignItems: "center",
-            transition: "border-color 200ms ease",
+            flexDirection: "column",
+            gap: 6,
           }}
         >
-          <textarea
-            ref={inputRef}
-            value={inputText}
-            onChange={(e) => setInputText(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                handleSend();
-              }
-            }}
-            onFocus={(e) => {
-              (e.currentTarget.parentElement as HTMLDivElement).style.borderColor = "var(--dash-teal)";
-            }}
-            onBlur={(e) => {
-              (e.currentTarget.parentElement as HTMLDivElement).style.borderColor = "var(--dash-border)";
-            }}
-            placeholder="Type a message..."
-            rows={1}
+          {/* Mode toggle strip */}
+          <div style={{ display: "flex", gap: 4 }}>
+            {([
+              { key: "chat" as const, label: "💬 Chat", color: "var(--dash-teal)" },
+              { key: "hint" as const, label: "💡 Hint", color: "var(--dash-amber)" },
+              { key: "full" as const, label: "📝 Solve", color: "var(--dash-success)" },
+            ]).map((m) => (
+              <button
+                key={m.key}
+                onClick={() => setSolveMode(m.key)}
+                style={{
+                  padding: "4px 10px",
+                  fontSize: 11,
+                  fontWeight: solveMode === m.key ? 600 : 400,
+                  color: solveMode === m.key ? m.color : "var(--dash-dim)",
+                  background: solveMode === m.key ? `${m.color}12` : "transparent",
+                  border: `1px solid ${solveMode === m.key ? `${m.color}30` : "transparent"}`,
+                  borderRadius: "var(--dash-radius-pill)",
+                  cursor: "pointer",
+                  fontFamily: "system-ui, -apple-system, sans-serif",
+                  transition: "all 150ms",
+                }}
+              >
+                {m.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Input field */}
+          <div
             style={{
-              flex: 1,
-              background: "transparent",
-              border: "none",
-              outline: "none",
-              color: "var(--dash-text)",
-              fontSize: "14px",
-              fontFamily: "system-ui, -apple-system, sans-serif",
-              resize: "none",
-              lineHeight: 1.5,
-              maxHeight: "120px",
+              background: "var(--dash-surface)",
+              border: "1px solid var(--dash-border)",
+              borderRadius: "24px",
+              padding: "12px 18px",
+              display: "flex",
+              alignItems: "center",
+              transition: "border-color 200ms ease",
             }}
-          />
+          >
+            <textarea
+              ref={inputRef}
+              value={inputText}
+              onChange={(e) => setInputText(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSend();
+                }
+              }}
+              onFocus={(e) => {
+                (e.currentTarget.parentElement as HTMLDivElement).style.borderColor = "var(--dash-teal)";
+              }}
+              onBlur={(e) => {
+                (e.currentTarget.parentElement as HTMLDivElement).style.borderColor = "var(--dash-border)";
+              }}
+              placeholder={solveMode !== "chat" ? "Type a math problem…" : "Type a message..."}
+              rows={1}
+              style={{
+                flex: 1,
+                background: "transparent",
+                border: "none",
+                outline: "none",
+                color: "var(--dash-text)",
+                fontSize: "14px",
+                fontFamily: "system-ui, -apple-system, sans-serif",
+                resize: "none",
+                lineHeight: 1.5,
+                maxHeight: "120px",
+              }}
+            />
+          </div>
         </div>
 
         {/* Send button */}
@@ -403,6 +484,7 @@ export default function ChatPage() {
             justifyContent: "center",
             transition: "background 200ms ease",
             flexShrink: 0,
+            alignSelf: "flex-end",
           }}
           whileTap={inputText.trim() ? { scale: 0.9 } : {}}
           onClick={() => handleSend()}
@@ -426,17 +508,38 @@ export default function ChatPage() {
   );
 }
 
-// Simple simulated responses
-function getSimulatedResponse(question: string): string {
-  const lower = question.toLowerCase();
-  if (lower.includes("photosynthesis")) {
-    return "Photosynthesis is the process by which green plants convert sunlight, water, and carbon dioxide into glucose and oxygen. The equation is:\n\n6CO₂ + 6H₂O + light energy → C₆H₁₂O₆ + 6O₂\n\nWould you like me to break down the light-dependent and light-independent reactions?";
+// Format solve response into readable text
+function formatSolveResponse(data: {
+  answer: string;
+  steps: string[];
+  explanation: string;
+  confidence: string;
+  solverVerified: boolean;
+}): string {
+  let text = "";
+
+  if (data.solverVerified) {
+    text += "✓ Verified by math solver\n\n";
   }
-  if (lower.includes("quiz") || lower.includes("test")) {
-    return "Let's do a quick quiz! Here's your first question:\n\nWhat is the primary function of mitochondria in a cell?\n\nTake your time — think about it before answering.";
+
+  text += `**Answer:** ${data.answer}\n\n`;
+
+  if (data.steps?.length > 0) {
+    text += "**Steps:**\n";
+    data.steps.forEach((step, i) => {
+      text += `${i + 1}. ${step}\n`;
+    });
+    text += "\n";
   }
-  if (lower.includes("next") || lower.includes("plan")) {
-    return "Based on your current study plan, your next topic is 'Cell Division — Mitosis vs Meiosis'. It's scheduled for tomorrow. Would you like me to give you a quick preview?";
+
+  if (data.explanation) {
+    text += `**Why:** ${data.explanation}`;
   }
-  return "That's a great question! Let me think about this carefully.\n\nBased on what we've covered in your recent sessions, this connects to the core concept of cellular processes. Would you like me to explain it step by step, or would you prefer a visual breakdown?";
+
+  if (data.confidence === "low") {
+    text += "\n\n⚠ Lower confidence — double-check this one.";
+  }
+
+  return text;
 }
+

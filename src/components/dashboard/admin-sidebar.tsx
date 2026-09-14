@@ -50,15 +50,39 @@ const icons = {
       <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" /><line x1="4" y1="22" x2="4" y2="15" />
     </svg>
   ),
+  shield: (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+    </svg>
+  ),
+  alert: (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" />
+    </svg>
+  ),
+  trending: (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" /><polyline points="17 6 23 6 23 12" />
+    </svg>
+  ),
+  upload: (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" y1="3" x2="12" y2="15" />
+    </svg>
+  ),
 };
 
 const adminNavItems = [
   { href: "/admin", label: "Overview", icon: icons.grid },
+  { href: "/admin/guarantee", label: "Guarantee Queue", icon: icons.shield },
+  { href: "/admin/escalations", label: "Escalations", icon: icons.alert },
   { href: "/admin/users", label: "Users", icon: icons.users },
   { href: "/admin/sessions", label: "Sessions", icon: icons.activity },
   { href: "/admin/waitlist", label: "Waitlist", icon: icons.list },
+  { href: "/admin/costs", label: "Usage & Costs", icon: icons.trending },
   { href: "/admin/revenue", label: "Revenue", icon: icons.dollar },
   { href: "/admin/content", label: "Curriculum", icon: icons.book },
+  { href: "/admin/materials", label: "Material Mod.", icon: icons.upload },
   { href: "/admin/flags", label: "Safety Flags", icon: icons.flag },
 ];
 

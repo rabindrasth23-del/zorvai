@@ -141,6 +141,85 @@ export const KeyConceptsExtractResponseSchema = z.object({
 export type KeyConceptsExtractResponse = z.infer<typeof KeyConceptsExtractResponseSchema>;
 
 // ---------------------------------------------------------------------------
+// V4: Grounded Teach (RAG-backed teaching from student's own materials)
+// ---------------------------------------------------------------------------
+
+export const GroundedTeachResponseSchema = z.object({
+  sections: z.array(z.object({
+    heading: z.string(),
+    content: z.string(),
+    source_reference: z.string().optional(),
+  })).min(1),
+  key_concepts: z.array(z.string()),
+  practice_questions: z.array(z.string()).optional(),
+});
+
+export type GroundedTeachResponse = z.infer<typeof GroundedTeachResponseSchema>;
+
+// ---------------------------------------------------------------------------
+// V4: Mock Exam Generate
+// ---------------------------------------------------------------------------
+
+export const MockExamGenerateResponseSchema = z.object({
+  questions: z.array(z.object({
+    id: z.number(),
+    topic: z.string(),
+    type: z.enum(["multiple_choice", "short_answer", "true_false"]),
+    difficulty: z.string(),
+    question: z.string(),
+    options: z.array(z.string()).nullable(),
+    correct_answer: z.string(),
+  })).min(1),
+});
+
+export type MockExamGenerateResponse = z.infer<typeof MockExamGenerateResponseSchema>;
+
+// ---------------------------------------------------------------------------
+// V4: Mock Exam Grade
+// ---------------------------------------------------------------------------
+
+export const MockExamGradeResponseSchema = z.object({
+  results: z.array(z.object({
+    questionId: z.number(),
+    correct: z.boolean(),
+    score: z.number(),
+    correctAnswer: z.string(),
+    explanation: z.string(),
+  })),
+  overallScore: z.number(),
+  weakTopics: z.array(z.string()),
+  strongTopics: z.array(z.string()),
+});
+
+export type MockExamGradeResponse = z.infer<typeof MockExamGradeResponseSchema>;
+
+// ---------------------------------------------------------------------------
+// V4: Snap & Solve
+// ---------------------------------------------------------------------------
+
+export const SnapSolveResponseSchema = z.object({
+  answer: z.string(),
+  steps: z.array(z.string()),
+  explanation: z.string(),
+  confidence: z.enum(["high", "medium", "low"]),
+});
+
+export type SnapSolveResponse = z.infer<typeof SnapSolveResponseSchema>;
+
+// ---------------------------------------------------------------------------
+// V4: Material Ingest (topic extraction from uploaded documents)
+// ---------------------------------------------------------------------------
+
+export const MaterialIngestResponseSchema = z.object({
+  topics: z.array(z.object({
+    name: z.string(),
+    source_pages: z.array(z.string()).optional(),
+  })).min(1),
+});
+
+export type MaterialIngestResponse = z.infer<typeof MaterialIngestResponseSchema>;
+
+// ---------------------------------------------------------------------------
 // Schema registry — maps call type to its Zod schema
 // ---------------------------------------------------------------------------
 
@@ -157,4 +236,10 @@ export const RESPONSE_SCHEMAS: Record<CallType, z.ZodType<any>> = {
   checkin: CheckinResponseSchema,
   onboarding_transition: OnboardingTransitionResponseSchema,
   safety_classifier: SafetyClassifierResponseSchema,
+  grounded_teach: GroundedTeachResponseSchema,
+  mock_exam_generate: MockExamGenerateResponseSchema,
+  mock_exam_grade: MockExamGradeResponseSchema,
+  snap_solve: SnapSolveResponseSchema,
+  material_ingest: MaterialIngestResponseSchema,
 };
+

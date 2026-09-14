@@ -1,16 +1,12 @@
 {
   "crons": [
     {
-      "path": "/api/cron/missed-session-check",
-      "schedule": "0 23 * * *"
-    },
-    {
-      "path": "/api/cron/weekly-digest",
-      "schedule": "0 9 * * 1"
+      "path": "/api/cron/review-scheduler",
+      "schedule": "0 6 * * *"
     },
     {
       "path": "/api/cron/abandon-stale-sessions",
-      "schedule": "0 2 * * *"
+      "schedule": "*/30 * * * *"
     }
   ]
 }

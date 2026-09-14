@@ -653,3 +653,69 @@ export function useScrollAnimation() {
     return () => observer.disconnect();
   }, []);
 }
+
+// ─── Stat Block (admin dashboards) ──────────────────────────────────────────
+
+interface StatBlockProps {
+  label: string;
+  value: string | number;
+  color?: string;
+}
+
+export function StatBlock({ label, value, color }: StatBlockProps) {
+  return (
+    <div>
+      <div
+        style={{
+          fontSize: "11px",
+          color: "var(--dash-dim)",
+          textTransform: "uppercase" as const,
+          letterSpacing: "0.04em",
+          marginBottom: "4px",
+          fontFamily: "system-ui, -apple-system, sans-serif",
+        }}
+      >
+        {label}
+      </div>
+      <div
+        className="text-number"
+        style={{
+          fontSize: "24px",
+          fontWeight: 600,
+          color: color || "var(--dash-text)",
+          lineHeight: 1.2,
+        }}
+      >
+        {value}
+      </div>
+    </div>
+  );
+}
+
+// ─── Badge (custom color chip for admin pages) ─────────────────────────────
+
+interface BadgeProps {
+  label: string;
+  color: string;
+}
+
+export function Badge({ label, color }: BadgeProps) {
+  return (
+    <span
+      style={{
+        color,
+        background: `${color}14`,
+        padding: "2px 8px",
+        borderRadius: "6px",
+        fontSize: "12px",
+        fontWeight: 500,
+        fontFamily: "system-ui, -apple-system, sans-serif",
+        whiteSpace: "nowrap" as const,
+        border: `1px solid ${color}30`,
+      }}
+    >
+      {label}
+    </span>
+  );
+}
+

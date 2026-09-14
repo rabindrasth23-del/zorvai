@@ -24,7 +24,12 @@ export type CallType =
   | 'chatbot'
   | 'checkin'
   | 'onboarding_transition'
-  | 'safety_classifier';
+  | 'safety_classifier'
+  | 'grounded_teach'
+  | 'mock_exam_generate'
+  | 'mock_exam_grade'
+  | 'snap_solve'
+  | 'material_ingest';
 
 // ---------------------------------------------------------------------------
 // Provider configuration
@@ -102,6 +107,7 @@ export const PROVIDER_CHAINS: Record<CallType, ProviderId[]> = {
   challenge: CLAUDE_FIRST,
   feedback: CLAUDE_FIRST,
   checkin: CLAUDE_FIRST,
+  mock_exam_grade: CLAUDE_FIRST,
 
   // Gemini for high-volume teaching/extraction phases
   teach: GEMINI_FIRST,
@@ -110,6 +116,10 @@ export const PROVIDER_CHAINS: Record<CallType, ProviderId[]> = {
   chatbot: GEMINI_FIRST,
   onboarding_transition: GEMINI_FIRST,
   safety_classifier: GEMINI_FIRST,
+  grounded_teach: GEMINI_FIRST,
+  mock_exam_generate: GEMINI_FIRST,
+  snap_solve: GEMINI_FIRST,
+  material_ingest: CLAUDE_FIRST,
 };
 
 // ---------------------------------------------------------------------------
