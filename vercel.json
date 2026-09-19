@@ -6,7 +6,7 @@
     },
     {
       "path": "/api/cron/abandon-stale-sessions",
-      "schedule": "*/30 * * * *"
+      "schedule": "0 0 * * *"
     }
   ]
 }
