@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Check, X, ShieldAlert } from "lucide-react";
+import { Check, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
@@ -78,17 +78,6 @@ export function PricingSection() {
 
   return (
     <div className="flex flex-col items-center w-full max-w-6xl mx-auto py-12 px-4 gap-12">
-      
-      {/* Waitlist Banner */}
-      <div className="w-full max-w-3xl bg-[var(--color-primary)]/10 border border-[var(--color-primary)]/20 rounded-2xl p-6 flex items-start gap-4 shadow-sm mb-4">
-        <ShieldAlert className="w-6 h-6 text-[var(--color-primary)] flex-shrink-0 mt-1" />
-        <div>
-          <h4 className="font-display font-semibold text-[var(--color-text)] text-lg">Waitlist Pricing Active</h4>
-          <p className="font-sans text-[var(--color-text-muted)] text-[var(--text-body-sm)] mt-1 leading-relaxed">
-            Tiered scarcity applies to Monthly and Annual plans: <strong>First 100 signups get 60% off forever</strong>. Signups 101-500 get 40% off forever. The discount is permanent and locks in your founding member rate.
-          </p>
-        </div>
-      </div>
 
       {/* Toggle */}
       <div className="flex items-center gap-3">

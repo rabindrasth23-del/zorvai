@@ -14,14 +14,14 @@ export default function EarlyAdopterCTA() {
 
         <FadeInSection delay={0.1}>
           <p className="font-sans text-[var(--text-h4)] leading-[var(--lh-body)] text-white/80 max-w-[600px] mb-[var(--space-12)] mx-auto">
-            We&apos;re running a closed pilot right now. Join the waitlist and shape how Zorvai works — first 100 get 60% off, forever.
+            We&apos;re running a closed pilot right now. Sign up and shape how Zorvai works — first 100 get 60% off, forever.
           </p>
 
           <Link
-            href="#waitlist"
+            href="/signup"
             className="inline-flex items-center gap-[var(--space-2)] font-sans text-[var(--text-body)] font-semibold text-white bg-[var(--color-accent)] px-[var(--space-8)] py-[var(--space-4)] rounded-[var(--radius-full)] no-underline shadow-[var(--shadow-sm)] hover:shadow-[var(--shadow-md)] hover:-translate-y-[1px] transition-all duration-200"
           >
-            Join the waitlist
+            Get started free
             <ArrowRight size={18} />
           </Link>
         </FadeInSection>

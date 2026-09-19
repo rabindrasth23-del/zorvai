@@ -6,8 +6,6 @@ import FeaturesSection from "@/components/landing/FeaturesSection";
 import EarlyAdopterCTA from "@/components/landing/EarlyAdopterCTA";
 import FounderStorySection from "@/components/landing/FounderStorySection";
 import GuaranteeSection from "@/components/landing/GuaranteeSection";
-import WaitlistBanner from "@/components/landing/WaitlistBanner";
-import WaitlistSection from "@/components/landing/WaitlistSection";
 import Footer from "@/components/landing/Footer";
 import {
   WaveDivider,
@@ -26,7 +24,6 @@ export default function LandingPage() {
   return (
     <main className="flex flex-col min-h-screen bg-bg">
       <Navbar />
-      <WaitlistBanner />
       <main>
         <HeroSection />
 
@@ -79,17 +76,9 @@ export default function LandingPage() {
 
         <FounderStorySection />
 
-        {/* Founder Story (surface) → Waitlist (bg) — curve */}
-        <SoftCurveDivider
-          bgColor="var(--color-surface)"
-          fillColor="var(--color-bg)"
-        />
-
-        <WaitlistSection />
-
-        {/* Waitlist (bg) → Footer (dark) — wave */}
+        {/* Founder Story (surface) → Footer (dark) — wave */}
         <WaveDivider
-          bgColor="var(--color-bg)"
+          bgColor="var(--color-surface)"
           fillColor="var(--color-text)"
         />
       </main>
