@@ -26,13 +26,13 @@ export default function Footer() {
       title: "RESOURCES",
       links: [
         { label: "How it works", href: "#how-it-works" },
-        { label: "Help center", href: "mailto:help@zorvai.ai" },
+        { label: "Help center", href: "mailto:help@zorvai.ca" },
       ],
     },
     {
       title: "COMPANY",
       links: [
-        { label: "Contact", href: "mailto:help@zorvai.ai" },
+        { label: "Contact", href: "mailto:help@zorvai.ca" },
       ],
     },
   ];

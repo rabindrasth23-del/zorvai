@@ -136,8 +136,8 @@ export default function PrivacyPage() {
                 <p className="text-sm mb-4">
                   You have the right to export or delete your data at any time via your Account Settings. Account deletion triggers a full cascade deletion of all your data within 14 days.
                 </p>
-                <a href="mailto:privacy@zorvai.ai" className="font-medium text-[var(--color-primary)] hover:underline">
-                  privacy@zorvai.ai
+                <a href="mailto:privacy@zorvai.ca" className="font-medium text-[var(--color-primary)] hover:underline">
+                  privacy@zorvai.ca
                 </a>
               </section>
             </div>

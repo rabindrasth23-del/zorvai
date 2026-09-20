@@ -1,8 +1,8 @@
-import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 
 import RecallRibbon from "./RecallRibbon";
 import HeroEntrance from "@/components/motion/hero-entrance";
+import { MotionLink } from "@/components/motion/micro-animations";
 
 export default function HeroSection() {
   return (
@@ -26,13 +26,13 @@ export default function HeroSection() {
           </p>
 
           <div className="flex flex-col items-center gap-[var(--space-3)] mb-[var(--space-12)]">
-            <Link
+            <MotionLink
               href="/signup"
-              className="inline-flex items-center gap-[var(--space-2)] font-sans text-[var(--text-body)] font-semibold text-white bg-[var(--color-accent)] px-[var(--space-8)] py-[var(--space-4)] rounded-[var(--radius-full)] no-underline shadow-[var(--shadow-sm)] hover:shadow-[var(--shadow-md)] hover:-translate-y-[1px] transition-all duration-200"
+              className="inline-flex items-center gap-[var(--space-2)] font-sans text-[var(--text-body)] font-semibold text-white bg-[var(--color-accent)] px-[var(--space-8)] py-[var(--space-4)] rounded-[var(--radius-full)] no-underline shadow-[var(--shadow-sm)] hover:shadow-[var(--shadow-md)] transition-shadow duration-200"
             >
               Start your first session
               <ArrowRight size={18} />
-            </Link>
+            </MotionLink>
           <div className="font-sans text-[var(--text-caption)] text-[var(--color-text-muted)]">
               Free baseline quiz · No credit card needed
             </div>

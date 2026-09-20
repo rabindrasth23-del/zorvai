@@ -1,6 +1,6 @@
-import Link from "next/link";
 import FadeInSection from "./FadeInSection";
 import { ArrowRight } from "lucide-react";
+import { MotionLink } from "@/components/motion/micro-animations";
 
 export default function EarlyAdopterCTA() {
   return (
@@ -17,13 +17,13 @@ export default function EarlyAdopterCTA() {
             We&apos;re running a closed pilot right now. Sign up and shape how Zorvai works — first 100 get 60% off, forever.
           </p>
 
-          <Link
+          <MotionLink
             href="/signup"
-            className="inline-flex items-center gap-[var(--space-2)] font-sans text-[var(--text-body)] font-semibold text-white bg-[var(--color-accent)] px-[var(--space-8)] py-[var(--space-4)] rounded-[var(--radius-full)] no-underline shadow-[var(--shadow-sm)] hover:shadow-[var(--shadow-md)] hover:-translate-y-[1px] transition-all duration-200"
+            className="inline-flex items-center gap-[var(--space-2)] font-sans text-[var(--text-body)] font-semibold text-white bg-[var(--color-accent)] px-[var(--space-8)] py-[var(--space-4)] rounded-[var(--radius-full)] no-underline shadow-[var(--shadow-sm)] hover:shadow-[var(--shadow-md)] transition-shadow duration-200"
           >
             Get started free
             <ArrowRight size={18} />
-          </Link>
+          </MotionLink>
         </FadeInSection>
       </div>
     </section>
